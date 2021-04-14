@@ -4,23 +4,38 @@
 #include "posix/socket-address.h"
 #include "posix/inet-address.h"
 
-namespace Posix {
-
 namespace {
 
+size_t init_sockaddr_inet(sockaddr_in *sockaddr, uint16_t port, in_addr const* addr)
+{
+	sockaddr->sin_family = AF_INET;
+	sockaddr->sin_port = port;
+	sockaddr->sin_addr = *addr;
+	return sizeof(sockaddr_in);
+}
+
+size_t init_sockaddr_inet6(sockaddr_in6 *sockaddr, uint16_t port, in6_addr const* addr)
+{
+	sockaddr->sin6_family = AF_INET6;
+	sockaddr->sin6_port = port;
+	sockaddr->sin6_addr = *addr;
+	return sizeof(sockaddr_in6);
+}
 
 }
 
-SocketAddress::SocketAddress(Inet::Address const&, uint16_t)
+namespace Posix {
+
+SocketAddress::SocketAddress(Inet::Address const& addr, uint16_t port)
 :
 	data_{std::make_unique<sockaddr_storage>()}
 {
 	switch (addr.family()) {
 	case Inet::Address::Family::Inet:
-		::init_sockaddr_inet(::htons(port));
+		size_ = ::init_sockaddr_inet(reinterpret_cast<sockaddr_in*>(data_.get()), ::htons(port), addr.in_addr_data());
 		break;
 	case Inet::Address::Family::Inet6:
-		::init_sockaddr_inet6(::htons(port));
+		size_ = ::init_sockaddr_inet6(reinterpret_cast<sockaddr_in6*>(data_.get()), ::htons(port), addr.in6_addr_data());
 		break;
 	}
 }
