@@ -18,8 +18,8 @@ DEPS = cppunit
 CXXFLAGS += $(shell pkg-config --cflags $(DEPS))
 LIBS = -Wl,--as-needed $(shell pkg-config --libs $(DEPS))
 
-TARGET = epoll_test
-TESTS = test_jsoncc
+TARGET = clingeling
+TESTS = test_epollcc
 
 SRC = $(wildcard src/*.cc)
 OBJ = $(SRC:%.cc=%.o)
@@ -27,7 +27,7 @@ COV_OBJ = $(SRC:%.cc=%.cov.o)
 
 TEST_SRC = $(wildcard src/tests/*.cc)
 TEST_OBJ = $(TEST_SRC:%.cc=%.cov.o)
-TEST_LIB = libjsoncc_test.a
+TEST_LIB = libepollcc_test.a
 
 ALL_OBJ = $(OBJ) $(TEST_OBJ) $(COV_OBJ)
 GCNO = $(ALL_OBJ:%.o=%.gcno)
