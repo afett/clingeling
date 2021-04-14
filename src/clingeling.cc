@@ -23,7 +23,7 @@ int clingeling(int, char *[])
 	auto connector = connector_factory->make_connector();
 
 	try {
-	connector->connect(fd, Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
+		connector->connect(fd, Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
 	} catch (std::system_error const& e) {
 		if (e.code() != std::errc::operation_in_progress) {
 			throw;
