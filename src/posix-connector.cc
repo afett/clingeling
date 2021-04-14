@@ -20,7 +20,7 @@ void ConnectorImpl::connect(Fd const& fd, SocketAddress const& addr) const
 	} while (res == -1 && errno == EINTR);
 
 	if (res == -1) {
-		throw POSIX_SYSTEM_ERROR("::connect(fd.get(), addr.data(), addr.size());", fd.get(), addr.getSockaddr(), addr.size());
+		throw POSIX_SYSTEM_ERROR("::connect(%s, %x, %s);", fd.get(), addr.getSockaddr(), addr.size());
 	}
 }
 
