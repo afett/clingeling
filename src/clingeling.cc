@@ -38,6 +38,21 @@ int clingeling(int, char *[])
 
 	auto buf = IO::Buffer{4096};
 	poller->add(fd, EPoll::Event::Type::In, [&buf, &reader, &poller](auto ev) {
+		if (ev & EPoll::Event::Type::Out) {
+			throw std::runtime_error("POLLOUT");
+		}
+		if (ev & EPoll::Event::Type::RdHup) {
+			throw std::runtime_error("RDHUP");
+		}
+		if (ev & EPoll::Event::Type::Pri) {
+			throw std::runtime_error("PRI");
+		}
+		if (ev & EPoll::Event::Type::Err) {
+			throw std::runtime_error("ERR");
+		}
+		if (ev & EPoll::Event::Type::Hup) {
+			throw std::runtime_error("HUP");
+		}
 		if (ev != EPoll::Event::Type::In) {
 			throw std::runtime_error("bad epoll event");
 		}
