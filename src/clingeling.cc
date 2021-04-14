@@ -9,10 +9,10 @@
 #include "posix/reader.h"
 #include "posix/fd.h"
 #include "posix/pipe-factory.h"
+#include <system_error>
 
 int clingeling(int, char *[])
 {
-
 	auto socket_factory = Posix::SocketFactory::create();
 	auto fd = socket_factory->make_socket({
 			Posix::SocketFactory::Params::Domain::Inet,
@@ -21,7 +21,14 @@ int clingeling(int, char *[])
 
 	auto connector_factory = Posix::ConnectorFactory::create();
 	auto connector = connector_factory->make_connector();
+
+	try {
 	connector->connect(fd, Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
+	} catch (std::system_error const& e) {
+		if (e.code() != std::errc::operation_in_progress) {
+			throw;
+		}
+	}
 
 	auto reader_factory = Posix::ReaderFactory::create();
 	auto reader = reader_factory->make_reader(fd);
