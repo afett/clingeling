@@ -1,8 +1,7 @@
 
 #include "epoll/ctrl.h"
 #include "epoll/event.h"
-#include "posix/socket-factory.h"
-#include "posix/connector.h"
+#include "posix/socket.h"
 #include "posix/inet-address.h"
 #include "posix/socket-address.h"
 #include "io/buffer.h"
@@ -14,16 +13,13 @@
 int clingeling(int, char *[])
 {
 	auto socket_factory = Posix::SocketFactory::create();
-	auto fd = socket_factory->make_socket({
+	auto socket = socket_factory->make_socket({
 			Posix::SocketFactory::Params::Domain::Inet,
 			Posix::SocketFactory::Params::Type::Stream,
 			true, true});
 
-	auto connector_factory = Posix::ConnectorFactory::create();
-	auto connector = connector_factory->make_connector();
-
 	try {
-		connector->connect(fd, Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
+		socket->connect(Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
 	} catch (std::system_error const& e) {
 		if (e.code() != std::errc::operation_in_progress) {
 			throw;
@@ -31,13 +27,13 @@ int clingeling(int, char *[])
 	}
 
 	auto reader_factory = Posix::ReaderFactory::create();
-	auto reader = reader_factory->make_reader(fd);
+	auto reader = reader_factory->make_reader(socket->get_fd());
 
 	auto poller_factory = EPoll::CtrlFactory::create();
 	auto poller = poller_factory->make_ctrl();
 
 	auto buf = IO::Buffer{4096};
-	poller->add(fd, EPoll::Event::Type::In, [&buf, &reader, &poller](auto ev) {
+	poller->add(socket->get_fd(), EPoll::Event::Type::In, [&buf, &reader, &poller](auto ev) {
 		if (ev & EPoll::Event::Type::Out) {
 			throw std::runtime_error("POLLOUT");
 		}
