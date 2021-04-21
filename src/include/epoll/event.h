@@ -7,7 +7,7 @@ namespace EPoll {
 class Event {
 public:
 	enum class Type {
-		In,
+		In = 0,
 		Out,
 		RdHup,
 		Pri,
