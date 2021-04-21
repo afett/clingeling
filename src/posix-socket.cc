@@ -15,7 +15,10 @@ public:
 	Fd get_fd() const override;
 	void bind(SocketAddress const&) const override;
 	void connect(SocketAddress const&) const override;
+	std::error_code get_socket_error() const override;
 private:
+	int getsockopt(int level, int optname) const;
+
 	Fd fd_;
 };
 
@@ -47,6 +50,22 @@ void SocketImpl::connect(SocketAddress const& addr) const
 	if (res == -1) {
 		throw POSIX_SYSTEM_ERROR("::connect(%s, %x, %s);", fd_.get(), addr.getSockaddr(), addr.size());
 	}
+}
+
+int SocketImpl::getsockopt(int level, int optname) const
+{
+	int value{0};
+	socklen_t len{sizeof(value)};
+	auto res = ::getsockopt(fd_.get(), level, optname, &value, &len);
+	if (res == -1) {
+		throw POSIX_SYSTEM_ERROR("::getsockopt(%s, %s, %s, %x, %s);:", fd_.get(), level, optname, &value, sizeof(value));
+	}
+	return value;
+}
+
+std::error_code SocketImpl::get_socket_error() const
+{
+	return {getsockopt(SOL_SOCKET, SO_ERROR), std::generic_category()};
 }
 
 class SocketFactoryImpl : public SocketFactory {
