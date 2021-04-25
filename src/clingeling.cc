@@ -42,7 +42,6 @@ public:
 		return socket_->get();
 	}
 
-
 	size_t write(void const* buf, size_t count) const override
 	{
 		return socket_->write(buf, count);
