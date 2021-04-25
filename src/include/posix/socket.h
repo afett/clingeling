@@ -10,7 +10,7 @@ class SocketAddress;
 
 class Socket {
 public:
-	virtual Fd get_fd() const = 0;
+	virtual std::shared_ptr<Fd> get_fd() const = 0;
 	virtual void bind(SocketAddress const&) const = 0;
 	virtual void connect(SocketAddress const&) const = 0;
 	virtual std::error_code get_socket_error() const = 0;

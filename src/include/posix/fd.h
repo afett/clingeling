@@ -6,35 +6,13 @@ namespace Posix {
 
 class Fd {
 public:
-	explicit Fd(int fd)
-	:
-		fd_(new Priv{fd})
-	{ }
+	static std::shared_ptr<Fd> create(int);
 
-	Fd() = default;
-	Fd(Fd const&) = default;
-	Fd(Fd &&) = default;
-	Fd & operator=(Fd const&) = default;
-	Fd & operator=(Fd &&) = default;
+	virtual int get() const = 0;
+	virtual size_t write(void const*, size_t) const = 0;
+	virtual size_t read(void *, size_t) const = 0;
 
-	inline explicit operator bool() const
-	{
-		return fd_ != nullptr;
-	}
-
-	inline int get() const
-	{
-		return fd_->fd;
-	}
-
-private:
-	struct Priv {
-		int fd = -1;
-
-		~Priv();
-	};
-
-	std::shared_ptr<Priv> fd_ = {nullptr};
+	virtual ~Fd() = default;
 };
 
 }

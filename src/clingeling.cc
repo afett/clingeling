@@ -4,7 +4,6 @@
 #include "posix/inet-address.h"
 #include "posix/socket-address.h"
 #include "io/buffer.h"
-#include "posix/reader.h"
 #include "posix/fd.h"
 #include "posix/pipe-factory.h"
 #include "fmt.h"
@@ -38,7 +37,7 @@ public:
 		socket_->bind(addr);
 	}
 
-	Posix::Fd get_fd() const override
+	std::shared_ptr<Posix::Fd> get_fd() const override
 	{
 		return socket_->get_fd();
 	}
@@ -243,9 +242,6 @@ int clingeling(int, char *[])
 		throw std::runtime_error("Socket in state Init");
 	}
 
-	auto reader_factory = Posix::ReaderFactory::create();
-	auto reader = reader_factory->make_reader(socket->get_fd());
-
 	auto buf = IO::Buffer{4096};
 	auto stream = StreamBuffer{buf};
 	auto netstring = NetstringReader{stream};
@@ -253,14 +249,14 @@ int clingeling(int, char *[])
 	auto poller_factory = EPoll::CtrlFactory::create();
 	auto poller = poller_factory->make_ctrl();
 
-	poller->add(socket->get_fd(), ev, [&netstring, &socket, &buf, &reader, &poller](auto ev) {
+	poller->add(socket->get_fd(), ev, [&netstring, &socket, &buf, &poller](auto ev) {
 		if (!ev) {
 			return;
 		}
 
 		if (socket->get_state() == StreamSocket::State::in_progress) {
 			socket->connect_continue();
-			poller->mod(reader->getFd(), EPoll::Event::Type::In);
+			poller->mod(socket->get_fd(), EPoll::Event::Type::In);
 			return;
 		}
 
@@ -283,7 +279,7 @@ int clingeling(int, char *[])
 			throw std::runtime_error("bad epoll event");
 		}
 
-		auto res = reader->read(buf.wstart(), buf.wsize());
+		auto res = socket->get_fd()->read(buf.wstart(), buf.wsize());
 		if (res == 0) {
 			// FIXME
 			throw std::runtime_error("Connection closed");
@@ -294,21 +290,20 @@ int clingeling(int, char *[])
 			std::cout << json << "\n";
 		}
 
-		poller->mod(reader->getFd(), buf.full() ? EPoll::Event{} : EPoll::Event::Type::In);
+		poller->mod(socket->get_fd(), buf.full() ? EPoll::Event{} : EPoll::Event::Type::In);
 	});
 
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
-	auto pipe_reader = reader_factory->make_reader(pipe.first);
 
 	auto run{true};
-	poller->add(pipe.first, EPoll::Event::Type::In, [&run, &pipe_reader](auto ev) {
+	poller->add(std::get<0>(pipe), EPoll::Event::Type::In, [&run, &pipe](auto ev) {
 		if (ev != EPoll::Event::Type::In) {
 			throw std::runtime_error("bad epoll event");
 		}
 
 		int wakeup{0};
-		auto res = pipe_reader->read(&wakeup, sizeof(wakeup));
+		auto res = std::get<0>(pipe)->read(&wakeup, sizeof(wakeup));
 		if (res == sizeof(wakeup)) {
 			run = false;
 			return;

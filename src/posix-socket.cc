@@ -10,31 +10,31 @@ namespace Posix {
 
 class SocketImpl : public Socket {
 public:
-	explicit SocketImpl(Fd const&);
+	explicit SocketImpl(std::shared_ptr<Fd> const&);
 
-	Fd get_fd() const override;
+	std::shared_ptr<Fd> get_fd() const override;
 	void bind(SocketAddress const&) const override;
 	void connect(SocketAddress const&) const override;
 	std::error_code get_socket_error() const override;
 private:
 	int getsockopt(int level, int optname) const;
 
-	Fd fd_;
+	std::shared_ptr<Fd> fd_;
 };
 
-SocketImpl::SocketImpl(Fd const& fd)
+SocketImpl::SocketImpl(std::shared_ptr<Fd> const& fd)
 :
 	fd_(fd)
 { }
 
-Fd SocketImpl::get_fd() const
+std::shared_ptr<Fd> SocketImpl::get_fd() const
 {
 	return fd_;
 }
 
 void SocketImpl::bind(SocketAddress const& addr) const
 {
-	auto res = ::bind(fd_.get(), addr.getSockaddr(), addr.size());
+	auto res = ::bind(fd_->get(), addr.getSockaddr(), addr.size());
 	if (res == -1) {
 		throw POSIX_SYSTEM_ERROR("::bind(fd.get(), addr.data(), addr.size());", fd_.get(), addr.getSockaddr(), addr.size());
 	}
@@ -44,7 +44,7 @@ void SocketImpl::connect(SocketAddress const& addr) const
 {
 	int res{-1};
 	do {
-		res = ::connect(fd_.get(), addr.getSockaddr(), addr.size());
+		res = ::connect(fd_->get(), addr.getSockaddr(), addr.size());
 	} while (res == -1 && errno == EINTR);
 
 	if (res == -1) {
@@ -56,7 +56,7 @@ int SocketImpl::getsockopt(int level, int optname) const
 {
 	int value{0};
 	socklen_t len{sizeof(value)};
-	auto res = ::getsockopt(fd_.get(), level, optname, &value, &len);
+	auto res = ::getsockopt(fd_->get(), level, optname, &value, &len);
 	if (res == -1) {
 		throw POSIX_SYSTEM_ERROR("::getsockopt(%s, %s, %s, %x, %s);:", fd_.get(), level, optname, &value, sizeof(value));
 	}
@@ -126,7 +126,7 @@ std::shared_ptr<Socket> SocketFactoryImpl::make_socket(Params const& params) con
 		throw make_system_error(errno, Fmt::format("::socket(%s, %s, %s);",
 					std::get<0>(call_params), std::get<1>(call_params), std::get<2>(call_params)));
 	}
-	return std::make_shared<SocketImpl>(Fd{fd});
+	return std::make_shared<SocketImpl>(Fd::create(fd));
 }
 
 }

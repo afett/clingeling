@@ -18,20 +18,20 @@ class CtrlImpl : public Ctrl {
 public:
 	CtrlImpl();
 
-	void add(Posix::Fd const&, Event const&, std::function<void(Event const&)> const&) override;
-	void del(Posix::Fd const&) override;
-	void mod(Posix::Fd const&, Event const&) const override;
+	void add(std::shared_ptr<Posix::Fd> const&, Event const&, std::function<void(Event const&)> const&) override;
+	void del(std::shared_ptr<Posix::Fd> const&) override;
+	void mod(std::shared_ptr<Posix::Fd> const&, Event const&) const override;
 	bool wait(std::chrono::milliseconds const&) const override;
 
 private:
 
 	struct Callback {
-		Posix::Fd fd;
+		std::shared_ptr<Posix::Fd> fd;
 		std::function<void(Event const&)> fn;
 	};
 
 	std::unordered_map<int, std::unique_ptr<Callback>> cb_;
-	Posix::Fd fd_;
+	std::shared_ptr<Posix::Fd> fd_;
 };
 
 }
@@ -92,48 +92,48 @@ namespace EPoll {
 
 CtrlImpl::CtrlImpl()
 :
-	fd_(::epoll_create1(EPOLL_CLOEXEC))
+	fd_(Posix::Fd::create(::epoll_create1(EPOLL_CLOEXEC)))
 {
-	if (fd_.get() == -1) {
+	if (fd_->get() == -1) {
 		throw Posix::make_system_error(errno, "::epoll_create1(EPOLL_CLOEXEC)");
 	}
 }
 
-void CtrlImpl::add(Posix::Fd const& fd, Event const& ev, std::function<void(Event const&)> const& fn)
+void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Event const& ev, std::function<void(Event const&)> const& fn)
 {
 	auto cb = std::unique_ptr<Callback>(new Callback{fd, fn});
 	epoll_event epoll_ev;
 	epoll_ev.events = ::epoll_events(ev);
 	epoll_ev.data.ptr = cb.get();
-	if (::epoll_ctl(fd_.get(), EPOLL_CTL_ADD, fd.get(), &epoll_ev) == -1) {
+	if (::epoll_ctl(fd_->get(), EPOLL_CTL_ADD, fd->get(), &epoll_ev) == -1) {
 		// throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_.get(), fd.get());
-		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_.get(), fd.get());
+		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_->get(), fd->get());
 	}
-	cb_.emplace(fd.get(), std::move(cb));
+	cb_.emplace(fd->get(), std::move(cb));
 }
 
-void CtrlImpl::del(Posix::Fd const& fd)
+void CtrlImpl::del(std::shared_ptr<Posix::Fd> const& fd)
 {
-	if (cb_.erase(fd.get()) == 0) {
+	if (cb_.erase(fd->get()) == 0) {
 		throw std::runtime_error("cound not find fd to delete");
 	}
-	if (::epoll_ctl(fd_.get(), EPOLL_CTL_DEL, fd.get(), nullptr) == -1) {
-		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_DEL, %s, nullptr)", fd_.get(), fd.get());
+	if (::epoll_ctl(fd_->get(), EPOLL_CTL_DEL, fd->get(), nullptr) == -1) {
+		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_DEL, %s, nullptr)", fd_->get(), fd->get());
 	}
 }
 
-void CtrlImpl::mod(Posix::Fd const& fd, Event const& ev) const
+void CtrlImpl::mod(std::shared_ptr<Posix::Fd> const& fd, Event const& ev) const
 {
-	auto it{cb_.find(fd.get())};
+	auto it{cb_.find(fd->get())};
 	if (it == std::end(cb_)) {
-		throw std::runtime_error(Fmt::format("could not find fd %s to modify", fd.get()));
+		throw std::runtime_error(Fmt::format("could not find fd %s to modify", fd->get()));
 	}
 
 	epoll_event epoll_ev;
 	epoll_ev.events = ::epoll_events(ev);
 	epoll_ev.data.ptr = it->second.get();
-	if (::epoll_ctl(fd_.get(), EPOLL_CTL_MOD, fd.get(), &epoll_ev) == -1) {
-		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_MOD, %s, &epoll_ev)", fd_.get(), fd.get());
+	if (::epoll_ctl(fd_->get(), EPOLL_CTL_MOD, fd->get(), &epoll_ev) == -1) {
+		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_MOD, %s, &epoll_ev)", fd_->get(), fd->get());
 	}
 }
 
@@ -147,7 +147,7 @@ bool CtrlImpl::wait(std::chrono::milliseconds const& timeout = Infinity()) const
 	auto events = std::array<epoll_event, 10>{};
 	int nevents{-1};
 	do {
-		nevents = ::epoll_wait(fd_.get(), events.data(), events.size(), to);
+		nevents = ::epoll_wait(fd_->get(), events.data(), events.size(), to);
 	} while (nevents == -1 && errno == EINTR);
 
 	if (nevents == -1) {

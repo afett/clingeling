@@ -10,7 +10,7 @@ namespace Posix {
 class PipeFactoryImpl : public PipeFactory {
 public:
 	static std::unique_ptr<PipeFactory> create();
-	std::pair<Fd, Fd> make_pipe(Params const&) const override;
+	Pipe make_pipe(Params const&) const override;
 };
 
 std::unique_ptr<PipeFactory> PipeFactory::create()
@@ -36,7 +36,7 @@ int pipe_params(PipeFactory::Params const& params)
 
 }
 
-std::pair<Fd, Fd> PipeFactoryImpl::make_pipe(Params const& params) const
+Pipe PipeFactoryImpl::make_pipe(Params const& params) const
 {
 	auto pipefd = std::array<int, 2>{-1, -1};
 	auto res = ::pipe2(pipefd.data(), pipe_params(params));
@@ -44,7 +44,7 @@ std::pair<Fd, Fd> PipeFactoryImpl::make_pipe(Params const& params) const
 		throw make_system_error(errno, Fmt::format("::pipe2(%x, %s);",
 				pipefd.data(), pipe_params(params)));
 	}
-	return {Fd{pipefd[0]}, Fd{pipefd[1]}};
+	return {Fd::create(pipefd[0]), Fd::create(pipefd[1])};
 }
 
 }
