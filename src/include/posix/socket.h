@@ -3,17 +3,18 @@
 #include <memory>
 #include <system_error>
 
+#include <posix/fd.h>
+
 namespace Posix {
 
-class Fd;
 class SocketAddress;
 
-class Socket {
+class Socket : public Fd {
 public:
-	virtual std::shared_ptr<Fd> get_fd() const = 0;
 	virtual void bind(SocketAddress const&) const = 0;
 	virtual void connect(SocketAddress const&) const = 0;
 	virtual std::error_code get_socket_error() const = 0;
+
 	virtual ~Socket() = default;
 };
 

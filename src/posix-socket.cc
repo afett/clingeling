@@ -12,10 +12,25 @@ class SocketImpl : public Socket {
 public:
 	explicit SocketImpl(std::shared_ptr<Fd> const&);
 
-	std::shared_ptr<Fd> get_fd() const override;
 	void bind(SocketAddress const&) const override;
 	void connect(SocketAddress const&) const override;
 	std::error_code get_socket_error() const override;
+
+	int get() const override
+	{
+		return fd_->get();
+	}
+
+	size_t write(void const* buf, size_t count) const override
+	{
+		return fd_->write(buf, count);
+	}
+
+	size_t read(void * buf, size_t count) const override
+	{
+		return fd_->read(buf, count);
+	}
+
 private:
 	int getsockopt(int level, int optname) const;
 
@@ -26,11 +41,6 @@ SocketImpl::SocketImpl(std::shared_ptr<Fd> const& fd)
 :
 	fd_(fd)
 { }
-
-std::shared_ptr<Fd> SocketImpl::get_fd() const
-{
-	return fd_;
-}
 
 void SocketImpl::bind(SocketAddress const& addr) const
 {

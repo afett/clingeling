@@ -37,9 +37,20 @@ public:
 		socket_->bind(addr);
 	}
 
-	std::shared_ptr<Posix::Fd> get_fd() const override
+	int get() const override
 	{
-		return socket_->get_fd();
+		return socket_->get();
+	}
+
+
+	size_t write(void const* buf, size_t count) const override
+	{
+		return socket_->write(buf, count);
+	}
+
+	size_t read(void *buf, size_t count) const override
+	{
+		return socket_->read(buf, count);
 	}
 
 	std::error_code get_socket_error() const override
@@ -249,14 +260,14 @@ int clingeling(int, char *[])
 	auto poller_factory = EPoll::CtrlFactory::create();
 	auto poller = poller_factory->make_ctrl();
 
-	poller->add(socket->get_fd(), ev, [&netstring, &socket, &buf, &poller](auto ev) {
+	poller->add(socket, ev, [&netstring, &socket, &buf, &poller](auto ev) {
 		if (!ev) {
 			return;
 		}
 
 		if (socket->get_state() == StreamSocket::State::in_progress) {
 			socket->connect_continue();
-			poller->mod(socket->get_fd(), EPoll::Event::Type::In);
+			poller->mod(socket, EPoll::Event::Type::In);
 			return;
 		}
 
@@ -279,7 +290,7 @@ int clingeling(int, char *[])
 			throw std::runtime_error("bad epoll event");
 		}
 
-		auto res = socket->get_fd()->read(buf.wstart(), buf.wsize());
+		auto res = socket->read(buf.wstart(), buf.wsize());
 		if (res == 0) {
 			// FIXME
 			throw std::runtime_error("Connection closed");
@@ -290,7 +301,7 @@ int clingeling(int, char *[])
 			std::cout << json << "\n";
 		}
 
-		poller->mod(socket->get_fd(), buf.full() ? EPoll::Event{} : EPoll::Event::Type::In);
+		poller->mod(socket, buf.full() ? EPoll::Event{} : EPoll::Event::Type::In);
 	});
 
 	auto pipe_factory = Posix::PipeFactory::create();
