@@ -108,7 +108,10 @@ void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Event const& ev, std::f
 	if (::epoll_ctl(fd_->get(), EPOLL_CTL_ADD, fd->get(), &epoll_ev) == -1) {
 		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_->get(), fd->get());
 	}
-	cb_.emplace(fd->get(), std::move(cb));
+	auto res = cb_.emplace(fd->get(), std::move(cb));
+	if (!res.second) {
+		throw std::runtime_error(Fmt::format("Failed to add Fd %s, already present", fd->get()));
+	}
 }
 
 void CtrlImpl::del(std::shared_ptr<Posix::Fd> const& fd)
