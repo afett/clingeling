@@ -106,7 +106,6 @@ void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Event const& ev, std::f
 	epoll_ev.events = ::epoll_events(ev);
 	epoll_ev.data.ptr = cb.get();
 	if (::epoll_ctl(fd_->get(), EPOLL_CTL_ADD, fd->get(), &epoll_ev) == -1) {
-		// throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_.get(), fd.get());
 		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_ADD, %s, &epoll_ev)", fd_->get(), fd->get());
 	}
 	cb_.emplace(fd->get(), std::move(cb));
