@@ -4,6 +4,7 @@
 #include "posix/inet-address.h"
 #include "posix/socket-address.h"
 #include "io/buffer.h"
+#include "io/stream-buffer.h"
 #include "posix/fd.h"
 #include "posix/pipe-factory.h"
 #include "fmt.h"
@@ -103,54 +104,9 @@ std::ostream & operator<<(std::ostream & os, StreamSocket::State state)
 	return os;
 }
 
-class StreamBuffer {
-public:
-	static constexpr int End = -1;
-
-	StreamBuffer(IO::ReadBuffer & buf)
-	:
-		buf_(buf)
-	{ }
-
-	IO::ReadBuffer & buffer()
-	{
-		return buf_;
-	}
-
-	int get()
-	{
-		if (buf_.empty()) {
-			return End;
-		}
-
-		auto res = *static_cast<char*>(buf_.rstart());
-		buf_.drain(sizeof(char));
-		return res;
-	}
-
-	std::string get_str(size_t len)
-	{
-		auto res = std::string{static_cast<char*>(buf_.rstart()), len};
-		buf_.drain(len);
-		return res;
-	}
-
-	int peek(size_t offs)
-	{
-		if (buf_.rsize() < offs) {
-			return End;
-		}
-
-		return *static_cast<char*>(buf_.rstart()) + offs;
-	}
-
-private:
-	IO::ReadBuffer & buf_;
-};
-
 class NetstringReader {
 public:
-	explicit NetstringReader(StreamBuffer & buf)
+	explicit NetstringReader(IO::StreamBuffer & buf)
 	:
 		buf_(buf)
 	{ }
@@ -192,7 +148,7 @@ private:
 	{
 		auto c = buf_.get();
 		switch (c) {
-		case StreamBuffer::End:
+		case IO::StreamBuffer::End:
 			break;
 		case '0' ... '9':
 			len_ = len_ * 10 + c - '0';
@@ -217,7 +173,7 @@ private:
 		case ',':
 			// TODO
 			return true;
-		case StreamBuffer::End:
+		case IO::StreamBuffer::End:
 			throw std::runtime_error("unexpected buffer end");
 		default:
 			throw std::runtime_error(Fmt::format("unexpected character '%s' while parsing delimiter", char(c)));
@@ -225,7 +181,7 @@ private:
 		return false;
 	}
 
-	StreamBuffer & buf_;
+	IO::StreamBuffer & buf_;
 	State state_ = State::length;
 	size_t len_ = 0;
 };
@@ -253,7 +209,7 @@ int clingeling(int, char *[])
 	}
 
 	auto buf = IO::Buffer{4096};
-	auto stream = StreamBuffer{buf};
+	auto stream = IO::StreamBuffer{buf};
 	auto netstring = NetstringReader{stream};
 
 	auto poller_factory = EPoll::CtrlFactory::create();
