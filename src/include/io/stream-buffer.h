@@ -14,7 +14,7 @@ public:
 	IO::ReadBuffer & buffer();
 	int get();
 	std::string get_str(size_t);
-	int peek(size_t);
+	int peek(size_t) const;
 
 private:
 	IO::ReadBuffer & buf_;
