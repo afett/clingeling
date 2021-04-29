@@ -40,4 +40,9 @@ int StreamBuffer::peek(size_t offs) const
 	return *static_cast<char*>(buf_.rstart()) + offs;
 }
 
+size_t StreamBuffer::size() const
+{
+	return buf_.rsize();
+}
+
 }

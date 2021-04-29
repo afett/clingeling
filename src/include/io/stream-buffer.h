@@ -15,6 +15,7 @@ public:
 	int get();
 	std::string get_str(size_t);
 	int peek(size_t) const;
+	size_t size() const;
 
 private:
 	IO::ReadBuffer & buf_;

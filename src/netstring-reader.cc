@@ -55,7 +55,7 @@ bool Reader::parse_length()
 
 bool Reader::parse_string() const
 {
-	return buf_.buffer().rsize() >= len_ + 1;
+	return buf_.size() >= len_ + 1;
 }
 
 bool Reader::parse_delim()
