@@ -37,7 +37,7 @@ int StreamBuffer::peek(size_t offs) const
 		return End;
 	}
 
-	return *static_cast<char*>(buf_.rstart()) + offs;
+	return *(static_cast<char*>(buf_.rstart()) + offs);
 }
 
 size_t StreamBuffer::size() const
