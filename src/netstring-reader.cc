@@ -14,6 +14,7 @@ bool Reader::parse(std::string & str)
 {
 	for (;;) {
 		switch (state_) {
+		case State::start:
 		case State::length:
 			if (parse_length()) {
 				state_ = State::string;
@@ -47,15 +48,18 @@ bool Reader::parse_length()
 		auto c = buf_.get();
 		switch (c) {
 		case '0' ... '9':
+			state_ = State::length;
 			len_ = len_ * 10 + c - '0';
-			break;
+			continue;
 		case ':':
-			return true;
+			if (state_ == State::length) {
+				return true;
+			}
+			break;
 		case IO::StreamBuffer::End:
 			return false;
-		default:
-			throw std::runtime_error(Fmt::format("unexpected character '%s' while parsing length", char(c)));
 		}
+		throw std::runtime_error(Fmt::format("unexpected character '%s' while parsing length", char(c)));
 	}
 }
 

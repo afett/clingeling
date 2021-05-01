@@ -14,9 +14,13 @@ public:
 
 private:
 	void simple_test();
+	void empty_netstring_test();
+	void missing_length_test();
 
 	CPPUNIT_TEST_SUITE(test);
 	CPPUNIT_TEST(simple_test);
+	CPPUNIT_TEST(empty_netstring_test);
+	CPPUNIT_TEST(missing_length_test);
 	CPPUNIT_TEST_SUITE_END();
 };
 
@@ -45,6 +49,36 @@ void test::simple_test()
 	CPPUNIT_ASSERT(ns_reader.parse(res));
 	CPPUNIT_ASSERT_EQUAL(std::string("Hello, world!"), res);
 	CPPUNIT_ASSERT_EQUAL(IO::StreamBuffer::End, stream.get());
+}
+
+void test::empty_netstring_test()
+{
+	auto buf = IO::Buffer{4096};
+	auto stream = IO::StreamBuffer{buf};
+	auto ns_reader = Netstring::Reader{stream};
+	auto netstr = std::string_view("0:,");
+	buf.reserve(netstr.size());
+	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
+	buf.fill(netstr.size());
+
+	std::string res;
+	CPPUNIT_ASSERT(ns_reader.parse(res));
+	CPPUNIT_ASSERT_EQUAL(std::string(""), res);
+	CPPUNIT_ASSERT_EQUAL(IO::StreamBuffer::End, stream.get());
+}
+
+void test::missing_length_test()
+{
+	auto buf = IO::Buffer{4096};
+	auto stream = IO::StreamBuffer{buf};
+	auto ns_reader = Netstring::Reader{stream};
+	auto netstr = std::string_view(":,");
+	buf.reserve(netstr.size());
+	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
+	buf.fill(netstr.size());
+
+	std::string res;
+	CPPUNIT_ASSERT_THROW(ns_reader.parse(res), std::runtime_error);
 }
 
 }}

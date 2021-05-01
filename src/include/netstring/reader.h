@@ -15,6 +15,7 @@ public:
 
 private:
 	enum class State {
+		start,
 		length,
 		string,
 		delim,
@@ -25,7 +26,7 @@ private:
 	bool parse_delim();
 
 	IO::StreamBuffer & buf_;
-	State state_ = State::length;
+	State state_ = State::start;
 	size_t len_ = 0;
 };
 
