@@ -33,7 +33,7 @@ std::string StreamBuffer::get_str(size_t len)
 
 int StreamBuffer::peek(size_t offs) const
 {
-	if (buf_.rsize() < offs) {
+	if (offs >= buf_.rsize()) {
 		return End;
 	}
 
