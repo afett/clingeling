@@ -12,45 +12,51 @@ Reader::Reader(IO::StreamBuffer & buf)
 
 bool Reader::parse(std::string & str)
 {
-	switch (state_) {
-	case State::length:
-		if (parse_length()) {
-			state_ = State::string;
+	for (;;) {
+		switch (state_) {
+		case State::length:
+			if (parse_length()) {
+				state_ = State::string;
+				continue;
+			}
+			break;
+		case State::string:
+			if (parse_string()) {
+				state_ = State::delim;
+				continue;
+			}
+			break;
+		case State::delim:
+			if (parse_delim()) {
+				str = buf_.get_str(len_);
+				buf_.get(); // discard ','
+				len_ = 0;
+				state_ = State::length;
+				return true;
+			}
+			break;
 		}
-		break;
-	case State::string:
-		if (parse_string()) {
-			state_ = State::delim;
-		}
-		break;
-	case State::delim:
-		if (parse_delim()) {
-			str = buf_.get_str(len_);
-			len_ = 0;
-			state_ = State::length;
-			return true;
-		}
-		break;
-	}
 
-	return false;
+		return false;
+	}
 }
 
 bool Reader::parse_length()
 {
-	auto c = buf_.get();
-	switch (c) {
-	case IO::StreamBuffer::End:
-		break;
-	case '0' ... '9':
-		len_ = len_ * 10 + c - '0';
-		break;
-	case ':':
-		return true;
-	default:
-		throw std::runtime_error(Fmt::format("unexpected character '%s' while parsing length", char(c)));
+	for (;;) {
+		auto c = buf_.get();
+		switch (c) {
+		case '0' ... '9':
+			len_ = len_ * 10 + c - '0';
+			break;
+		case ':':
+			return true;
+		case IO::StreamBuffer::End:
+			return false;
+		default:
+			throw std::runtime_error(Fmt::format("unexpected character '%s' while parsing length", char(c)));
+		}
 	}
-	return false;
 }
 
 bool Reader::parse_string() const
