@@ -66,7 +66,7 @@ bool Reader::parse_string() const
 
 bool Reader::parse_delim()
 {
-	auto c = buf_.peek(len_ + 1);
+	auto c = buf_.peek(len_);
 	switch (c) {
 	case ',':
 		// TODO
