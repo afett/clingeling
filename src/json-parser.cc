@@ -96,7 +96,7 @@ Object parse_object(std::istream & in, size_t depth)
 		throw std::runtime_error("parse_object: expected: '}'");
 	}
 
-	return {};
+	return res;
 }
 
 Array parse_array(std::istream & in, size_t depth)
@@ -121,7 +121,7 @@ Array parse_array(std::istream & in, size_t depth)
 		throw std::runtime_error("parse_array: expected: ']'");
 	}
 
-	return {};
+	return res;
 }
 
 Value parse_document(std::istream & in, size_t depth)
