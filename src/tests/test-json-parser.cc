@@ -90,6 +90,8 @@ void test::simple_object_test()
 	auto o = Json::parse_object(is);
 	CPPUNIT_ASSERT(!o.empty());
 	CPPUNIT_ASSERT_EQUAL(size_t(1), o.size());
+	CPPUNIT_ASSERT(Json::holds_alternative<std::string>(o["foo"]));
+	CPPUNIT_ASSERT_EQUAL(std::string{"bar"}, Json::get<std::string>(o["foo"]));
 }
 
 void test::empty_array_test()
@@ -141,6 +143,8 @@ void test::simple_array_test()
 	auto a = Json::parse_array(is);
 	CPPUNIT_ASSERT(!a.empty());
 	CPPUNIT_ASSERT_EQUAL(size_t(1), a.size());
+	CPPUNIT_ASSERT(Json::holds_alternative<std::string>(a[0]));
+	CPPUNIT_ASSERT_EQUAL(std::string{"bar"}, Json::get<std::string>(a[0]));
 }
 
 }}
