@@ -6,7 +6,7 @@ namespace Posix {
 
 class CharDev : public Fd {
 public:
-	virtual void ioctl(unsigned long, char*) const = 0;
+	virtual void ioctl(unsigned long, void*) const = 0;
 };
 
 class CharDevFactory {

@@ -10,7 +10,7 @@ class CharDevImpl : public CharDev {
 public:
 	explicit CharDevImpl(std::shared_ptr<Fd> const&);
 
-	void ioctl(unsigned long, char*) const override;
+	void ioctl(unsigned long, void*) const override;
 
 	int get() const override
 	{
@@ -36,7 +36,7 @@ CharDevImpl::CharDevImpl(std::shared_ptr<Fd> const& fd)
 	fd_(fd)
 { }
 
-void CharDevImpl::ioctl(unsigned long request, char *argp) const
+void CharDevImpl::ioctl(unsigned long request, void *argp) const
 {
 	int res{-1};
 	do {
