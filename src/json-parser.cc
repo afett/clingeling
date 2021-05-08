@@ -106,7 +106,7 @@ Object parse_object(std::istream & in, size_t depth)
 	} while (parse_comma(in));
 
 	if (in.get() != '}') {
-		throw std::runtime_error("parse_object: expected: '}'");
+		throw std::runtime_error("parse_object: expected: '}' or ','");
 	}
 
 	return res;
