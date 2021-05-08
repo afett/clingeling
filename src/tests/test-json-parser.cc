@@ -1,6 +1,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "json/parser.h"
+#include "assertion-traits.h"
 
 namespace unittests {
 namespace json_parser {
@@ -17,6 +18,8 @@ private:
 	void simple_object_test();
 	void empty_array_test();
 	void simple_array_test();
+	void bool_test();
+	void null_test();
 
 	CPPUNIT_TEST_SUITE(test);
 	CPPUNIT_TEST(simple_test);
@@ -24,6 +27,7 @@ private:
 	CPPUNIT_TEST(simple_object_test);
 	CPPUNIT_TEST(empty_array_test);
 	CPPUNIT_TEST(simple_array_test);
+	CPPUNIT_TEST(null_test);
 	CPPUNIT_TEST_SUITE_END();
 };
 
@@ -145,6 +149,37 @@ void test::simple_array_test()
 	CPPUNIT_ASSERT_EQUAL(size_t(1), a.size());
 	CPPUNIT_ASSERT(Json::holds_alternative<std::string>(a[0]));
 	CPPUNIT_ASSERT_EQUAL(std::string{"bar"}, Json::get<std::string>(a[0]));
+}
+
+void test::bool_test()
+{
+	std::stringstream is{
+		"{"
+			"\"foo\": true,"
+			"\"bar\": false"
+		"}"
+	};
+	auto o = Json::parse_object(is);
+	CPPUNIT_ASSERT(!o.empty());
+	CPPUNIT_ASSERT_EQUAL(size_t(2), o.size());
+	CPPUNIT_ASSERT(Json::holds_alternative<bool>(o["foo"]));
+	CPPUNIT_ASSERT_EQUAL(true, Json::get<bool>(o["foo"]));
+	CPPUNIT_ASSERT(Json::holds_alternative<bool>(o["bar"]));
+	CPPUNIT_ASSERT_EQUAL(false, Json::get<bool>(o["bar"]));
+}
+
+void test::null_test()
+{
+	std::stringstream is{
+		"{"
+			"\"foo\": null"
+		"}"
+	};
+	auto o = Json::parse_object(is);
+	CPPUNIT_ASSERT(!o.empty());
+	CPPUNIT_ASSERT_EQUAL(size_t(1), o.size());
+	CPPUNIT_ASSERT(Json::holds_alternative<nullptr_t>(o["foo"]));
+	CPPUNIT_ASSERT_EQUAL(nullptr, Json::get<nullptr_t>(o["foo"]));
 }
 
 }}

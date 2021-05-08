@@ -26,6 +26,19 @@ std::string parse_string(std::istream & in)
 	return res;
 }
 
+template <typename T>
+T parse_bareword(std::istream & in, std::string const& word, T value)
+{
+	std::string res;
+	while (res.size() != word.size()) {
+		res += in.get();
+	}
+	if (res != word) {
+		throw std::runtime_error(std::string("parse_bareword:") + "Expected: " + word + " got " + res);
+	}
+	return value;
+}
+
 Json::Value parse_value(std::istream & in, size_t depth)
 {
 	if (++depth > 256) {
@@ -37,9 +50,9 @@ Json::Value parse_value(std::istream & in, size_t depth)
 	case '{': return Json::Value{Json::parse_object(in, depth)};
 	case '[': return Json::Value{Json::parse_array(in, depth)};
 	case '"': return Json::Value{parse_string(in)};
-	case 't': throw std::runtime_error("parse_value: true unimplemented");
-	case 'f': throw std::runtime_error("parse_value: false unimplemented");
-	case 'n': throw std::runtime_error("parse_value: null unimplemented");
+	case 't': return Json::Value{parse_bareword(in, "true", true)};
+	case 'f': return Json::Value{parse_bareword(in, "false", false)};
+	case 'n': return Json::Value{parse_bareword(in, "null", nullptr)};
 	case '+': case '-': case '1'...'9':
 		  throw std::runtime_error("parse_value: number unimplemented");
 	default:
