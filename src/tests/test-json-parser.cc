@@ -13,7 +13,6 @@ public:
 	void tearDown();
 
 private:
-	void simple_test();
 	void empty_object_test();
 	void simple_object_test();
 	void empty_array_test();
@@ -22,11 +21,11 @@ private:
 	void null_test();
 
 	CPPUNIT_TEST_SUITE(test);
-	CPPUNIT_TEST(simple_test);
 	CPPUNIT_TEST(empty_object_test);
 	CPPUNIT_TEST(simple_object_test);
 	CPPUNIT_TEST(empty_array_test);
 	CPPUNIT_TEST(simple_array_test);
+	CPPUNIT_TEST(bool_test);
 	CPPUNIT_TEST(null_test);
 	CPPUNIT_TEST_SUITE_END();
 };
@@ -40,9 +39,6 @@ void test::setUp()
 { }
 
 void test::tearDown()
-{ }
-
-void test::simple_test()
 { }
 
 void test::empty_object_test()
