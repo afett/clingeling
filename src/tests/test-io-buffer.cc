@@ -14,7 +14,6 @@ public:
 	void tearDown();
 
 private:
-	void simple_test();
 	void test_empty();
 	void test_reserved();
 	void test_one_byte();
@@ -27,7 +26,7 @@ private:
 	void test_preallocated_zero();
 
 	CPPUNIT_TEST_SUITE(test);
-	CPPUNIT_TEST(simple_test);
+	CPPUNIT_TEST(test_empty);
 	CPPUNIT_TEST(test_reserved);
 	CPPUNIT_TEST(test_one_byte);
 	CPPUNIT_TEST(test_preallocated);
@@ -49,9 +48,6 @@ void test::setUp()
 { }
 
 void test::tearDown()
-{ }
-
-void test::simple_test()
 { }
 
 void test::test_empty()
