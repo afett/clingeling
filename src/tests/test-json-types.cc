@@ -72,7 +72,8 @@ void test::get_test()
 
 void test::visit_test()
 {
-
+	auto v = Json::Value{};
+	std::visit([](auto) {}, v.get());
 }
 
 }}

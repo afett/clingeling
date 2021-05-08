@@ -62,6 +62,11 @@ public:
 		return std::holds_alternative<Object>(value_);
 	}
 
+	value_type get() const
+	{
+		return value_;
+	}
+
 	template <typename T> friend std::add_pointer_t<T> get_if(Value *);
 	template <class T> friend T& get(Value &);
 	template <class T> friend T&& get(Value &&);
@@ -140,14 +145,6 @@ inline Array make_array(std::initializer_list<ValueMaker> l)
 	}
 	return res;
 }
-
-/*
-template <class Visitor>
-std::invoke_result_t<Visitor, Value> visit(Visitor && vis, Value && v)
-{
-	return std::visit(std::forward<Visitor>(vis), std::forward<Value>(v));
-}
-*/
 
 template <typename T>
 std::add_pointer_t<T> get_if(Value *v)
