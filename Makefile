@@ -60,7 +60,7 @@ run_gdb: $(TESTS)
 	LD_LIBRARY_PATH=. gdb ./$(TESTS)
 
 coverage: run_tests
-	lcov -c -b . -d src -d tests --output-file coverage/lcov.raw; \
+	lcov -c -b . -d src -d src/tests --output-file coverage/lcov.raw; \
 	lcov -r coverage/lcov.raw "/usr/include/*" --output-file coverage/lcov.info; \
 	genhtml coverage/lcov.info --output-directory coverage
 
