@@ -17,6 +17,11 @@ public:
 
 	Value() = default;
 
+	explicit Value(nullptr_t)
+	:
+		value_{nullptr}
+	{ }
+
 	explicit Value(bool v)
 	:
 		value_{v}
