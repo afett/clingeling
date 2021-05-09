@@ -26,5 +26,10 @@ private:
 	int value_ = 0;
 };
 
+enum class Option {
+	None,
+	NoHang,
+};
+
 }}
 
