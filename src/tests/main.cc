@@ -1,22 +1,9 @@
-#include <cppunit/BriefTestProgressListener.h>
-#include <cppunit/TestResult.h>
-#include <cppunit/TextTestRunner.h>
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/CompilerOutputter.h>
+#include "utest/assert.h"
+#include "utest/registry.h"
+
+#include <iostream>
 #include <cstdlib>
 #include <unistd.h>
-
-namespace {
-
-void printTestTree(CppUnit::Test const* root)
-{
-	std::cerr << root->getName() << "\n";
-	for (int i(0); i < root->getChildTestCount(); ++i) {
-		printTestTree(root->getChildTestAt(i));
-	}
-}
-
-}
 
 int main(int argc, char *argv[])
 {
@@ -38,23 +25,39 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	CppUnit::TestFactoryRegistry & registry(
-		CppUnit::TestFactoryRegistry::getRegistry());
-	CppUnit::Test *test(registry.makeTest());
-
 	if (list) {
-		printTestTree(test);
+		for (auto const& test : UTest::Registry::get()) {
+			std::cout << test.name << "\n";
+		}
 		return EXIT_SUCCESS;
 	}
 
-	CppUnit::TextTestRunner runner;
-	runner.addTest(test);
+	size_t total{0};
+	size_t failed{0};
+	for (auto const& test : UTest::Registry::get()) {
+		if (!testname.empty() && test.name.find(testname) == 0) {
+			continue;
+		}
 
-	CppUnit::BriefTestProgressListener progress;
-	runner.eventManager().addListener(&progress);
+		++total;
+		try {
+			test.run();
+			std::cout << "[OK] " << test.name << "\n";
+			continue;
+		} catch (UTest::AssertionFailure const& fail) {
+			std::cerr << fail.loc << " Test " << test.name << " failed:\n";
+			std::cerr << fail.loc << " " << fail.msg << "\n";
+		} catch (std::exception const& e) {
+			std::cerr << test.loc << " Test " << test.name << " failed:\n";
+			std::cerr << test.loc << " unhandled exception of type " << UTest::type_name(e) << ": what: " << e.what() << "\n";
+		} catch (...) {
+			std::cerr << test.loc << " Test " << test.name << " failed:\n";
+			std::cerr << test.loc << " unhandled excepetion of unknown type \n";
+		}
+		std::cout << "[FAIL] " << test.name << "\n";
+		++failed;
+	}
 
-	runner.setOutputter(new CppUnit::CompilerOutputter(
-		&runner.result(), std::cerr, "%p:%l:"));
-
-	return runner.run(testname) ? EXIT_SUCCESS : EXIT_FAILURE;
+	std::cout << (failed == 0 ? "[OK]" : "[FAILED]") << " " << total << " Tests: OK:" << total - failed << " FAILED: " << failed << "\n";
+	return (failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,34 +1,21 @@
-#include <cppunit/extensions/HelperMacros.h>
+#include "utest/macros.h"
 
 namespace unittests {
 namespace empty {
 
-class test : public CppUnit::TestCase {
+UTEST_CASE(simple_test)
+{
+	UTEST_ASSERT(true);
+}
+
+class Fixture {
 public:
-	test();
-	void setUp();
-	void tearDown();
-
-private:
-	void simple_test();
-
-	CPPUNIT_TEST_SUITE(test);
-	CPPUNIT_TEST(simple_test);
-	CPPUNIT_TEST_SUITE_END();
+	int value = 42;
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION(test);
-
-test::test()
-{ }
-
-void test::setUp()
-{ }
-
-void test::tearDown()
-{ }
-
-void test::simple_test()
-{ }
+UTEST_CASE_WITH_FIXTURE(simple_fixture_test, Fixture)
+{
+	UTEST_ASSERT_EQUAL(42, value);
+}
 
 }}

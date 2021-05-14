@@ -1,38 +1,11 @@
-#include <cppunit/extensions/HelperMacros.h>
+#include "utest/macros.h"
 
 #include "json/serializer.h"
 
 namespace unittests {
 namespace json_serializer {
 
-class test : public CppUnit::TestCase {
-public:
-	test();
-	void setUp();
-	void tearDown();
-
-private:
-	void serialize_object_test();
-	void serialize_array_test();
-
-	CPPUNIT_TEST_SUITE(test);
-	CPPUNIT_TEST(serialize_object_test);
-	CPPUNIT_TEST(serialize_array_test);
-	CPPUNIT_TEST_SUITE_END();
-};
-
-CPPUNIT_TEST_SUITE_REGISTRATION(test);
-
-test::test()
-{ }
-
-void test::setUp()
-{ }
-
-void test::tearDown()
-{ }
-
-void test::serialize_object_test()
+UTEST_CASE(serialize_object_test)
 {
 	auto o = Json::make_object({
 		{"null", nullptr},
@@ -58,10 +31,10 @@ void test::serialize_object_test()
 		"}"
 	};
 
-	CPPUNIT_ASSERT_EQUAL(ref, Json::to_string(o));
+	UTEST_ASSERT_EQUAL(ref, Json::to_string(o));
 }
 
-void test::serialize_array_test()
+UTEST_CASE(serialize_array_test)
 {
 	auto o = Json::make_array({
 		nullptr,
@@ -87,7 +60,7 @@ void test::serialize_array_test()
 		"]"
 	};
 
-	CPPUNIT_ASSERT_EQUAL(ref, Json::to_string(o));
+	UTEST_ASSERT_EQUAL(ref, Json::to_string(o));
 }
 
 }}
