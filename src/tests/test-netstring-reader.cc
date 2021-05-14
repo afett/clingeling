@@ -6,11 +6,15 @@
 namespace unittests {
 namespace netstring_reader {
 
-UTEST_CASE(simple_test)
+class Fixture {
+public:
+	IO::Buffer buf{4096};
+	IO::StreamBuffer stream{buf};
+	Netstring::Reader ns_reader{stream};
+};
+
+UTEST_CASE_WITH_FIXTURE(simple_test, Fixture)
 {
-	auto buf = IO::Buffer{4096};
-	auto stream = IO::StreamBuffer{buf};
-	auto ns_reader = Netstring::Reader{stream};
 	auto netstr = std::string_view("13:Hello, world!,");
 	buf.reserve(netstr.size());
 	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
@@ -22,11 +26,8 @@ UTEST_CASE(simple_test)
 	UTEST_ASSERT_EQUAL(IO::StreamBuffer::End, stream.get());
 }
 
-UTEST_CASE(empty_netstring_test)
+UTEST_CASE_WITH_FIXTURE(empty_netstring_test, Fixture)
 {
-	auto buf = IO::Buffer{4096};
-	auto stream = IO::StreamBuffer{buf};
-	auto ns_reader = Netstring::Reader{stream};
 	auto netstr = std::string_view("0:,");
 	buf.reserve(netstr.size());
 	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
@@ -38,11 +39,8 @@ UTEST_CASE(empty_netstring_test)
 	UTEST_ASSERT_EQUAL(IO::StreamBuffer::End, stream.get());
 }
 
-UTEST_CASE(missing_length_test)
+UTEST_CASE_WITH_FIXTURE(missing_length_test, Fixture)
 {
-	auto buf = IO::Buffer{4096};
-	auto stream = IO::StreamBuffer{buf};
-	auto ns_reader = Netstring::Reader{stream};
 	auto netstr = std::string_view(":,");
 	buf.reserve(netstr.size());
 	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
@@ -52,11 +50,8 @@ UTEST_CASE(missing_length_test)
 	UTEST_ASSERT_THROW(ns_reader.parse(res), std::runtime_error);
 }
 
-UTEST_CASE(missing_comma_test)
+UTEST_CASE_WITH_FIXTURE(missing_comma_test, Fixture)
 {
-	auto buf = IO::Buffer{4096};
-	auto stream = IO::StreamBuffer{buf};
-	auto ns_reader = Netstring::Reader{stream};
 	auto netstr = std::string_view("13:Hello, world!$");
 	buf.reserve(netstr.size());
 	netstr.copy(static_cast<char *>(buf.wstart()), netstr.size());
@@ -66,12 +61,8 @@ UTEST_CASE(missing_comma_test)
 	UTEST_ASSERT_THROW(ns_reader.parse(res), std::runtime_error);
 }
 
-UTEST_CASE(parse_chunks_test)
+UTEST_CASE_WITH_FIXTURE(parse_chunks_test, Fixture)
 {
-	auto buf = IO::Buffer{4096};
-	auto stream = IO::StreamBuffer{buf};
-	auto ns_reader = Netstring::Reader{stream};
-
 	std::string res;
 
 	auto netstr = std::string_view("1");
