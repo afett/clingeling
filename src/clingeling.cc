@@ -11,95 +11,13 @@
 #include <system_error>
 #include <iostream>
 
-class StreamSocket : public Posix::Socket {
-public:
-	enum class State {
-		init,
-		in_progress,
-		connected,
-		error,
-	};
-
-	explicit StreamSocket(Posix::SocketFactory & socket_factory)
-	:
-		socket_{socket_factory.make_socket({
-			Posix::SocketFactory::Params::Domain::Inet,
-			Posix::SocketFactory::Params::Type::Stream,
-			Posix::Fd::Option::nonblock|Posix::Fd::Option::cloexec})}
-	{ }
-
-	State get_state() const
-	{
-		return state_;
-	}
-
-	void bind(Posix::SocketAddress const& addr) const override
-	{
-		socket_->bind(addr);
-	}
-
-	int get() const override
-	{
-		return socket_->get();
-	}
-
-	size_t write(void const* buf, size_t count) const override
-	{
-		return socket_->write(buf, count);
-	}
-
-	size_t read(void *buf, size_t count) const override
-	{
-		return socket_->read(buf, count);
-	}
-
-	std::error_code get_socket_error() const override
-	{
-		return socket_->get_socket_error();
-	}
-
-	void connect(Posix::SocketAddress const& addr) const override
-	{
-		try {
-			socket_->connect(addr);
-		} catch (std::system_error const& e) {
-			if (e.code() == std::errc::operation_in_progress) {
-				state_ = State::in_progress;
-				return;
-			} else {
-				state_ = State::error;
-				throw;
-			}
-		}
-		state_ = State::connected;
-	}
-
-	void connect_continue()
-	{
-		if (state_ != State::in_progress) {
-			throw std::runtime_error("Socket connect not in progress");
-		}
-
-		auto ec{socket_->get_socket_error()};
-		if (ec) {
-			throw std::system_error(ec);
-		}
-
-		state_ = State::connected;
-	}
-
-private:
-	mutable State state_ = State::init;
-	std::shared_ptr<Posix::Socket> socket_;
-};
-
-std::ostream & operator<<(std::ostream & os, StreamSocket::State state)
+std::ostream & operator<<(std::ostream & os, Posix::StreamSocket::State state)
 {
 	switch (state) {
-	case StreamSocket::State::init: return os << "init";
-	case StreamSocket::State::in_progress: return os << "in_progress";
-	case StreamSocket::State::connected: return os << "connected";
-	case StreamSocket::State::error: return os << "error";
+	case Posix::StreamSocket::State::init: return os << "init";
+	case Posix::StreamSocket::State::in_progress: return os << "in_progress";
+	case Posix::StreamSocket::State::connected: return os << "connected";
+	case Posix::StreamSocket::State::error: return os << "error";
 	}
 	return os;
 }
@@ -107,22 +25,25 @@ std::ostream & operator<<(std::ostream & os, StreamSocket::State state)
 int clingeling(int, char *[])
 {
 	auto socket_factory = Posix::SocketFactory::create();
-	auto socket = std::make_shared<StreamSocket>(*socket_factory);
+	auto socket = socket_factory->make_stream_socket({
+			Posix::SocketFactory::Params::Domain::Inet,
+			Posix::SocketFactory::Params::Type::Stream,
+			Posix::Fd::Option::nonblock|Posix::Fd::Option::cloexec});
 
 	socket->connect(Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
 
-	std::cerr << socket->get_state() << "\n";
+	std::cerr << socket->state() << "\n";
 
 	EPoll::Events ev{EPoll::Event::In};
-	switch (socket->get_state()) {
-	case StreamSocket::State::in_progress:
+	switch (socket->state()) {
+	case Posix::StreamSocket::State::in_progress:
 		ev = EPoll::Event::Out;
 		// fallthrough
-	case StreamSocket::State::connected:
+	case Posix::StreamSocket::State::connected:
 		break;
-	case StreamSocket::State::error:
+	case Posix::StreamSocket::State::error:
 		throw std::runtime_error("Socket in state Error");
-	case StreamSocket::State::init:
+	case Posix::StreamSocket::State::init:
 		throw std::runtime_error("Socket in state Init");
 	}
 
@@ -138,7 +59,7 @@ int clingeling(int, char *[])
 			return;
 		}
 
-		if (socket->get_state() == StreamSocket::State::in_progress) {
+		if (socket->state() == Posix::StreamSocket::State::in_progress) {
 			socket->connect_continue();
 			poller->mod(socket, EPoll::Events{EPoll::Event::In});
 			return;

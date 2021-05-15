@@ -78,10 +78,83 @@ std::error_code SocketImpl::get_socket_error() const
 	return {getsockopt(SOL_SOCKET, SO_ERROR), std::generic_category()};
 }
 
+class StreamSocketImpl : public StreamSocket {
+public:
+	explicit StreamSocketImpl(std::shared_ptr<Socket> const& socket)
+	:
+		socket_(socket)
+	{ }
+
+	State state() const override
+	{
+		return state_;
+	}
+
+	void bind(Posix::SocketAddress const& addr) const override
+	{
+		socket_->bind(addr);
+	}
+
+	int get() const override
+	{
+		return socket_->get();
+	}
+
+	size_t write(void const* buf, size_t count) const override
+	{
+		return socket_->write(buf, count);
+	}
+
+	size_t read(void *buf, size_t count) const override
+	{
+		return socket_->read(buf, count);
+	}
+
+	std::error_code get_socket_error() const override
+	{
+		return socket_->get_socket_error();
+	}
+
+	void connect(SocketAddress const& addr) const override
+	{
+		try {
+			socket_->connect(addr);
+		} catch (std::system_error const& e) {
+			if (e.code() == std::errc::operation_in_progress) {
+				state_ = State::in_progress;
+				return;
+			} else {
+				state_ = State::error;
+				throw;
+			}
+		}
+		state_ = State::connected;
+	}
+
+	void connect_continue()
+	{
+		if (state_ != State::in_progress) {
+			throw std::runtime_error("Socket connect not in progress");
+		}
+
+		auto ec{socket_->get_socket_error()};
+		if (ec) {
+			throw std::system_error(ec);
+		}
+
+		state_ = State::connected;
+	}
+
+private:
+	mutable State state_ = State::init;
+	std::shared_ptr<Socket> socket_;
+};
+
 class SocketFactoryImpl : public SocketFactory {
 public:
 	static std::unique_ptr<SocketFactory> create();
 	std::shared_ptr<Socket> make_socket(Params const&) const override;
+	std::shared_ptr<StreamSocket> make_stream_socket(Params const&) const override;
 };
 
 std::unique_ptr<SocketFactory> SocketFactory::create()
@@ -137,6 +210,13 @@ std::shared_ptr<Socket> SocketFactoryImpl::make_socket(Params const& params) con
 					std::get<0>(call_params), std::get<1>(call_params), std::get<2>(call_params)));
 	}
 	return std::make_shared<SocketImpl>(Fd::create(fd));
+}
+
+std::shared_ptr<StreamSocket> SocketFactoryImpl::make_stream_socket(Params const& params) const
+{
+	auto stream_params = params;
+	stream_params.type = Params::Type::Stream;
+	return std::make_shared<StreamSocketImpl>(make_socket(stream_params));
 }
 
 }
