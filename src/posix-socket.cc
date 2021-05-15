@@ -115,11 +115,11 @@ std::tuple<int, int, int> socket_params(SocketFactory::Params const& params)
 		break;
 	}
 
-	if (params.nonblock) {
+	if (params.options & Fd::Option::nonblock) {
 		std::get<1>(res) |= SOCK_NONBLOCK;
 	}
 
-	if (params.cloexec) {
+	if (params.options & Fd::Option::cloexec) {
 		std::get<1>(res) |= SOCK_CLOEXEC;
 	}
 

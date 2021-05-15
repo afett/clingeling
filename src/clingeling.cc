@@ -25,7 +25,7 @@ public:
 		socket_{socket_factory.make_socket({
 			Posix::SocketFactory::Params::Domain::Inet,
 			Posix::SocketFactory::Params::Type::Stream,
-			true, true})}
+			Posix::Fd::Option::nonblock|Posix::Fd::Option::cloexec})}
 	{ }
 
 	State get_state() const

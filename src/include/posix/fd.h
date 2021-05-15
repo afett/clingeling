@@ -1,11 +1,20 @@
 #pragma once
 
+#include "flags.h"
+
 #include <memory>
 
 namespace Posix {
 
 class Fd {
 public:
+	enum class Option {
+		nonblock,
+		cloexec,
+	};
+
+	using Options = Flags<Option>;
+
 	static std::shared_ptr<Fd> create(int);
 
 	virtual int get() const = 0;
@@ -16,3 +25,5 @@ public:
 };
 
 }
+
+DECLARE_FLAG_TYPE(Posix::Fd::Option);

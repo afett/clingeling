@@ -34,8 +34,7 @@ public:
 
 		Domain domain = Domain::Unix;
 		Type type = Type::Stream;
-		bool nonblock = false;
-		bool cloexec = false;
+		Fd::Options options = {};
 	};
 
 	static std::unique_ptr<SocketFactory> create();
