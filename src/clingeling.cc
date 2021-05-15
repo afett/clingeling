@@ -140,7 +140,7 @@ int clingeling(int, char *[])
 
 		if (socket->get_state() == StreamSocket::State::in_progress) {
 			socket->connect_continue();
-			poller->mod(socket, EPoll::Event::In);
+			poller->mod(socket, EPoll::Events{EPoll::Event::In});
 			return;
 		}
 
@@ -174,14 +174,14 @@ int clingeling(int, char *[])
 			std::cout << json << "\n";
 		}
 
-		poller->mod(socket, buf.full() ? EPoll::Events{} : EPoll::Event::In);
+		poller->mod(socket, buf.full() ? EPoll::Events{} : EPoll::Events{EPoll::Event::In});
 	});
 
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
 
 	auto run{true};
-	poller->add(std::get<0>(pipe), EPoll::Event::In, [&run, &pipe](auto ev) {
+	poller->add(std::get<0>(pipe), EPoll::Events{EPoll::Event::In}, [&run, &pipe](auto ev) {
 		if (ev != EPoll::Event::In) {
 			throw std::runtime_error("bad epoll event");
 		}

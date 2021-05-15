@@ -43,3 +43,5 @@ public:
 };
 
 }
+
+DECLARE_FLAG_TYPE(EPoll::Event);
