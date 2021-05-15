@@ -3,7 +3,6 @@
 #include <sys/epoll.h>
 
 #include "epoll/ctrl.h"
-#include "epoll/event.h"
 #include "posix/fd.h"
 #include "posix/system-error.h"
 
@@ -18,16 +17,16 @@ class CtrlImpl : public Ctrl {
 public:
 	CtrlImpl();
 
-	void add(std::shared_ptr<Posix::Fd> const&, Event const&, std::function<void(Event const&)> const&) override;
+	void add(std::shared_ptr<Posix::Fd> const&, Events const&, std::function<void(Events const&)> const&) override;
 	void del(std::shared_ptr<Posix::Fd> const&) override;
-	void mod(std::shared_ptr<Posix::Fd> const&, Event const&) const override;
+	void mod(std::shared_ptr<Posix::Fd> const&, Events const&) const override;
 	bool wait(std::chrono::milliseconds const&) const override;
 
 private:
 
 	struct Callback {
 		std::shared_ptr<Posix::Fd> fd;
-		std::function<void(Event const&)> fn;
+		std::function<void(Events const&)> fn;
 	};
 
 	std::unordered_map<int, std::unique_ptr<Callback>> cb_;
@@ -38,50 +37,50 @@ private:
 
 namespace {
 
-uint32_t epoll_events(EPoll::Event const& ev)
+uint32_t epoll_events(EPoll::Events const& ev)
 {
 	uint32_t res{0};
-	if (ev & EPoll::Event::Type::In) {
+	if (ev & EPoll::Event::In) {
 		res |= EPOLLIN;
 	}
-	if (ev & EPoll::Event::Type::Out) {
+	if (ev & EPoll::Event::Out) {
 		res |= EPOLLOUT;
 	}
-	if (ev & EPoll::Event::Type::RdHup) {
+	if (ev & EPoll::Event::RdHup) {
 		res |= EPOLLRDHUP;
 	}
-	if (ev & EPoll::Event::Type::Pri) {
+	if (ev & EPoll::Event::Pri) {
 		res |= EPOLLPRI;
 	}
-	if (ev & EPoll::Event::Type::Err) {
+	if (ev & EPoll::Event::Err) {
 		res |= EPOLLERR;
 	}
-	if (ev & EPoll::Event::Type::Hup) {
+	if (ev & EPoll::Event::Hup) {
 		res |= EPOLLHUP;
 	}
 	return res;
 }
 
-EPoll::Event epoll_events(uint32_t ev)
+EPoll::Events epoll_events(uint32_t ev)
 {
-	EPoll::Event res{};
+	EPoll::Events res{};
 	if (ev & EPOLLIN) {
-		res |= EPoll::Event::Type::In;
+		res |= EPoll::Event::In;
 	}
 	if (ev & EPOLLOUT) {
-		res |= EPoll::Event::Type::Out;
+		res |= EPoll::Event::Out;
 	}
 	if (ev & EPOLLRDHUP) {
-		res |= EPoll::Event::Type::RdHup;
+		res |= EPoll::Event::RdHup;
 	}
 	if (ev & EPOLLPRI) {
-		res |= EPoll::Event::Type::Pri;
+		res |= EPoll::Event::Pri;
 	}
 	if (ev & EPOLLERR) {
-		res |= EPoll::Event::Type::Err;
+		res |= EPoll::Event::Err;
 	}
 	if (ev & EPOLLHUP) {
-		res |= EPoll::Event::Type::Hup;
+		res |= EPoll::Event::Hup;
 	}
 	return res;
 }
@@ -99,7 +98,7 @@ CtrlImpl::CtrlImpl()
 	}
 }
 
-void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Event const& ev, std::function<void(Event const&)> const& fn)
+void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Events const& ev, std::function<void(Events const&)> const& fn)
 {
 	auto cb = std::unique_ptr<Callback>(new Callback{fd, fn});
 	epoll_event epoll_ev;
@@ -124,7 +123,7 @@ void CtrlImpl::del(std::shared_ptr<Posix::Fd> const& fd)
 	}
 }
 
-void CtrlImpl::mod(std::shared_ptr<Posix::Fd> const& fd, Event const& ev) const
+void CtrlImpl::mod(std::shared_ptr<Posix::Fd> const& fd, Events const& ev) const
 {
 	auto it{cb_.find(fd->get())};
 	if (it == std::end(cb_)) {

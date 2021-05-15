@@ -1,5 +1,7 @@
 #pragma once
 
+#include "flags.h"
+
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -10,13 +12,22 @@ class Fd;
 
 namespace EPoll {
 
-class Event;
+enum class Event {
+	In = 0,
+	Out,
+	RdHup,
+	Pri,
+	Err,
+	Hup,
+};
+
+using Events = Flags<Event>;
 
 class Ctrl {
 public:
-	virtual void add(std::shared_ptr<Posix::Fd> const&, Event const&, std::function<void(Event const&)> const&) = 0;
+	virtual void add(std::shared_ptr<Posix::Fd> const&, Events const&, std::function<void(Events const&)> const&) = 0;
 	virtual void del(std::shared_ptr<Posix::Fd> const&) = 0;
-	virtual void mod(std::shared_ptr<Posix::Fd> const&, Event const&) const = 0;
+	virtual void mod(std::shared_ptr<Posix::Fd> const&, Events const&) const = 0;
 
 	static std::chrono::milliseconds Infinity();
 	virtual bool wait(std::chrono::milliseconds const& = Infinity()) const = 0;

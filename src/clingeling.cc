@@ -1,5 +1,4 @@
 #include "epoll/ctrl.h"
-#include "epoll/event.h"
 #include "posix/socket.h"
 #include "posix/inet-address.h"
 #include "posix/socket-address.h"
@@ -114,10 +113,10 @@ int clingeling(int, char *[])
 
 	std::cerr << socket->get_state() << "\n";
 
-	EPoll::Event ev{EPoll::Event::Type::In};
+	EPoll::Events ev{EPoll::Event::In};
 	switch (socket->get_state()) {
 	case StreamSocket::State::in_progress:
-		ev = EPoll::Event::Type::Out;
+		ev = EPoll::Event::Out;
 		// fallthrough
 	case StreamSocket::State::connected:
 		break;
@@ -141,26 +140,26 @@ int clingeling(int, char *[])
 
 		if (socket->get_state() == StreamSocket::State::in_progress) {
 			socket->connect_continue();
-			poller->mod(socket, EPoll::Event::Type::In);
+			poller->mod(socket, EPoll::Event::In);
 			return;
 		}
 
-		if (ev & EPoll::Event::Type::Out) {
+		if (ev & EPoll::Event::Out) {
 			throw std::runtime_error("POLLOUT");
 		}
-		if (ev & EPoll::Event::Type::RdHup) {
+		if (ev & EPoll::Event::RdHup) {
 			throw std::runtime_error("RDHUP");
 		}
-		if (ev & EPoll::Event::Type::Pri) {
+		if (ev & EPoll::Event::Pri) {
 			throw std::runtime_error("PRI");
 		}
-		if (ev & EPoll::Event::Type::Err) {
+		if (ev & EPoll::Event::Err) {
 			throw std::runtime_error("ERR");
 		}
-		if (ev & EPoll::Event::Type::Hup) {
+		if (ev & EPoll::Event::Hup) {
 			throw std::runtime_error("HUP");
 		}
-		if (ev != EPoll::Event::Type::In) {
+		if (ev != EPoll::Event::In) {
 			throw std::runtime_error("bad epoll event");
 		}
 
@@ -175,15 +174,15 @@ int clingeling(int, char *[])
 			std::cout << json << "\n";
 		}
 
-		poller->mod(socket, buf.full() ? EPoll::Event{} : EPoll::Event::Type::In);
+		poller->mod(socket, buf.full() ? EPoll::Events{} : EPoll::Event::In);
 	});
 
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
 
 	auto run{true};
-	poller->add(std::get<0>(pipe), EPoll::Event::Type::In, [&run, &pipe](auto ev) {
-		if (ev != EPoll::Event::Type::In) {
+	poller->add(std::get<0>(pipe), EPoll::Event::In, [&run, &pipe](auto ev) {
+		if (ev != EPoll::Event::In) {
 			throw std::runtime_error("bad epoll event");
 		}
 
