@@ -1,11 +1,11 @@
-JSONCC_DEBUG ?=
+DEBUG_BUILD ?=
 
 CXX ?= g++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++17
 LDFLAGS = -L.
 CPPFLAGS =  -Isrc -Isrc/include
 
-ifeq ($(JSONCC_DEBUG),1)
+ifeq ($(DEBUG_BUILD),1)
 DEBUG_CXXFLAGS += -g -O0
 else
 DEBUG_CXXFLAGS += -O2
@@ -19,7 +19,7 @@ DEPS =
 LIBS = # -Wl,--as-needed $(shell pkg-config --libs $(DEPS))
 
 TARGET = clingeling
-TESTS = test_epollcc
+TESTS = test_clingeling
 
 SRC = $(wildcard src/*.cc)
 OBJ = $(SRC:%.cc=%.o)
@@ -27,13 +27,13 @@ COV_OBJ = $(SRC:%.cc=%.cov.o)
 
 TEST_SRC = $(wildcard src/tests/*.cc)
 TEST_OBJ = $(TEST_SRC:%.cc=%.cov.o)
-TEST_LIB = libepollcc_test.a
+TEST_LIB = libclingeling_test.a
 
 ALL_OBJ = $(OBJ) $(TEST_OBJ) $(COV_OBJ)
 GCNO = $(ALL_OBJ:%.o=%.gcno)
 GCDA = $(ALL_OBJ:%.o=%.gcda)
 
-all: $(TARGET) $(TESTS) $(PKGCONFIG)
+all: $(TARGET) $(TESTS)
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $(OBJ) $(LDFLAGS) $(LIBS)
@@ -63,14 +63,6 @@ coverage: run_tests
 	lcov -c -b . -d src -d src/tests --output-file coverage/lcov.raw; \
 	lcov -r coverage/lcov.raw "/usr/include/*" --output-file coverage/lcov.info; \
 	genhtml coverage/lcov.info --output-directory coverage
-
-install: all
-	install -d $(PREFIX)/lib
-	install -m 755 $(TARGET) $(PREFIX)/lib/
-	install -d $(PREFIX)/include/
-	install -m 644 include/*.h $(PREFIX)/include/
-	install -d $(PREFIX)/lib/pkgconfig
-	install -m 644 $(PKGCONFIG) $(PREFIX)/lib/pkgconfig/
 
 clean:
 	rm -rf $(TARGET) $(TESTS) $(TEST_LIB) $(ALL_OBJ) $(GCNO) $(GCDA) coverage/* *.pc
