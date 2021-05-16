@@ -93,6 +93,7 @@ public:
 	}
 
 	template <typename T> friend std::add_pointer_t<T> get_if(Value *);
+	template <typename T> friend std::add_pointer_t<const T> get_if(Value const*);
 	template <class T> friend T& get(Value &);
 	template <class T> friend T&& get(Value &&);
 	template <class T> friend T const& get(Value const&);
@@ -172,7 +173,13 @@ inline Array make_array(std::initializer_list<ValueMaker> l)
 }
 
 template <typename T>
-std::add_pointer_t<T> get_if(Value *v)
+std::add_pointer_t<T> get_if(Value * v)
+{
+	return std::get_if<T>(&v->value_);
+}
+
+template <typename T>
+std::add_pointer_t<const T> get_if(Value const* v)
 {
 	return std::get_if<T>(&v->value_);
 }
