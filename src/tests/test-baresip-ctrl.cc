@@ -82,4 +82,28 @@ UTEST_CASE_WITH_FIXTURE(register_fail_test, EventTestFixture)
 	UTEST_ASSERT_EQUAL(expected, res);
 }
 
+/*
+
+{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"Connection reset by user"}
+{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"Connection reset by user"}
+{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"9e62dfd55fe6aa7d","param":"No such device"}
+{"event":true,"type":"CALL_ESTABLISHED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"sip:7777@192.168.55.1:5060"}
+{"event":true,"type":"CALL_ESTABLISHED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"sip:7777@asterisk.example.com;transport=udp"}
+{"event":true,"type":"CALL_INCOMING","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"sip:7777@192.168.55.1:5060"}
+{"event":true,"type":"CALL_RINGING","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"sip:7777@asterisk.example.com;transport=udp"}
+{"event":true,"type":"CALL_RTCP","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"audio","rtcp_stats":{"tx":{"sent":9752,"lost":0,"jit":1625},"rx":{"sent":1,"lost":0,"jit":0},"rtt":24995}}
+{"event":true,"type":"CALL_RTCP","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"audio","rtcp_stats":{"tx":{"sent":10002,"lost":0,"jit":1500},"rx":{"sent":0,"lost":0,"jit":0},"rtt":25284}}
+{"event":true,"type":"EXIT","class":"application"},
+{"event":true,"type":"REGISTER_FAIL","class":"register","accountaor":"sip:9999-1@asterisk.example.com","param":"401 Unauthorized"}
+{"event":true,"type":"REGISTER_FAIL","class":"register","accountaor":"sip:9999-1@asterisk.example.com","param":"Connection timed out"}
+{"event":true,"type":"REGISTER_OK","class":"register","accountaor":"sip:9999-1@asterisk.example.com","param":"200 OK"}
+{"event":true,"type":"SHUTDOWN","class":"application","accountaor":"sip:9999-1@asterisk.example.com"}
+{"event":true,"type":"UNREGISTERING","class":"register","accountaor":"sip:9999-1@asterisk.example.com"}
+{"event":true,"type":"VU_RX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"-60.22"}
+{"event":true,"type":"VU_RX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"-13.58"}
+{"event":true,"type":"VU_TX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"-13.96"}
+{"event":true,"type":"VU_TX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"-14.54"}
+
+*/
+
 }}
