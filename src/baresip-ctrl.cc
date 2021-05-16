@@ -113,8 +113,6 @@ void CtrlImpl::on_json(Json::Object const& obj)
 
 	if (auto param = get_if<std::string>(&obj, "param")) {
 		ev.param = *param;
-	} else {
-		throw std::runtime_error("failed to get event param");
 	}
 
 	on_event_(ev);
