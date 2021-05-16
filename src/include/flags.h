@@ -26,6 +26,8 @@
 #pragma once
 
 #include <type_traits>
+#include <initializer_list>
+#include <functional>
 
 template <typename T> struct IsFlagType;
 
@@ -124,4 +126,16 @@ template <typename T>
 Flags<T> operator&(Flags<T> const& l, Flags<T> const& r)
 {
 	return Flags<T>(l) &= r;
+}
+
+template <typename T>
+void dispatch(
+	Flags<T> const& flags,
+	std::initializer_list<std::tuple<T, std::function<void(void)>>> actions)
+{
+	for (auto const& action : actions) {
+		if (flags & std::get<0>(action)) {
+			std::get<1>(action)();
+		}
+	}
 }
