@@ -43,11 +43,12 @@ public:
 		ctrl->on_event([this] (auto const& ev) { have_res = true; res = ev; });
 	}
 
-	void send_data(std::string_view const& data)
+	void send_data(std::string const& str)
 	{
-		recvbuf.reserve(data.size());
-		data.copy(static_cast<char *>(recvbuf.wstart()), data.size());
-		recvbuf.fill(data.size());
+		auto netstr = std::to_string(str.size()) + ':' + str + ',';
+		recvbuf.reserve(netstr.size());
+		netstr.copy(static_cast<char *>(recvbuf.wstart()), netstr.size());
+		recvbuf.fill(netstr.size());
 	}
 
 	IO::EventBuffer recvbuf;
@@ -59,13 +60,15 @@ public:
 
 UTEST_CASE_WITH_FIXTURE(register_fail_test, EventTestFixture)
 {
-	auto data = std::string_view{
-		"130:{\""
-		"event\":true,"
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
 		"\"type\":\"REGISTER_FAIL\","
 		"\"class\":\"register\","
 		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
-		"\"param\":\"401 Unauthorized\"},"};
+		"\"param\":\"401 Unauthorized\""
+		"}"
+	};
 	send_data(data);
 
 	UTEST_ASSERT(have_res);
