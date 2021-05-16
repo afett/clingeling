@@ -73,7 +73,7 @@ Event::Type event_type(std::string const& str)
 		{"REGISTER_OK", Event::Type::RegisterOk},
 		{"REGISTER_FAIL", Event::Type::RegisterFail},
 		{"UNREGISTERING", Event::Type::Unregistering},
-		});
+	});
 }
 
 Event::Class event_class(std::string const&)
