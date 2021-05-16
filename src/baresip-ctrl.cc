@@ -55,9 +55,25 @@ void CtrlImpl::on_event(std::function<void(Event const&)> const& cb)
 
 namespace {
 
-Event::Type event_type(std::string const&)
+template <typename T>
+T select(std::string const& str, std::initializer_list<std::tuple<std::string, T>> map)
 {
-	return Event::Type::RegisterFail;
+	for (auto const& mapping : map) {
+		if (str == std::get<0>(mapping)) {
+			return std::get<1>(mapping);
+		}
+	}
+
+	throw std::runtime_error("failed to map: " + str);
+}
+
+Event::Type event_type(std::string const& str)
+{
+	return select<Event::Type>(str, {
+		{"REGISTER_OK", Event::Type::RegisterOk},
+		{"REGISTER_FAIL", Event::Type::RegisterFail},
+		{"UNREGISTERING", Event::Type::Unregistering},
+		});
 }
 
 Event::Class event_class(std::string const&)

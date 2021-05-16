@@ -40,6 +40,8 @@ class Event {
 public:
 	enum class Type {
 		RegisterFail,
+		RegisterOk,
+		Unregistering,
 	};
 
 	enum class Class {
