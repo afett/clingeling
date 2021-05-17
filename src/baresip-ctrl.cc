@@ -76,9 +76,11 @@ std::tuple<bool, Event::Type> event_type(std::string const& str)
 	});
 }
 
-Event::Class event_class(std::string const&)
+std::tuple<bool, Event::Class> event_class(std::string const& str)
 {
-	return Event::Class::Register;
+	return select<Event::Class>(str, {
+		{"register", Event::Class::Register},
+	});
 }
 
 template <typename T>
@@ -120,7 +122,10 @@ void CtrlImpl::on_json(Json::Object const& obj)
 	}
 
 	if (auto class_str = get_if<std::string>(&obj, "class")) {
-		ev.klass = event_class(*class_str);
+		std::tie(ok, ev.klass) = event_class(*class_str);
+		if (!ok) {
+			return;
+		}
 	} else {
 		throw std::runtime_error("failed to get event class");
 	}
