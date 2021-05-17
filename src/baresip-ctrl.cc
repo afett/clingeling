@@ -56,18 +56,18 @@ void CtrlImpl::on_event(std::function<void(Event const&)> const& cb)
 namespace {
 
 template <typename T>
-T select(std::string const& str, std::initializer_list<std::tuple<std::string, T>> map)
+std::tuple<bool, T> select(std::string const& str, std::initializer_list<std::tuple<std::string, T>> map)
 {
 	for (auto const& mapping : map) {
 		if (str == std::get<0>(mapping)) {
-			return std::get<1>(mapping);
+			return {true, std::get<1>(mapping)};
 		}
 	}
 
-	throw std::runtime_error("failed to map: " + str);
+	return {false, T{}};
 }
 
-Event::Type event_type(std::string const& str)
+std::tuple<bool, Event::Type> event_type(std::string const& str)
 {
 	return select<Event::Type>(str, {
 		{"REGISTER_OK", Event::Type::RegisterOk},
@@ -109,8 +109,12 @@ void CtrlImpl::on_json(Json::Object const& obj)
 	}
 
 	Event ev;
+	bool ok{false};
 	if (auto type_str = get_if<std::string>(&obj, "type")) {
-		ev.type = event_type(*type_str);
+		std::tie(ok, ev.type) = event_type(*type_str);
+		if (!ok) {
+			return;
+		}
 	} else {
 		throw std::runtime_error("failed to get event type");
 	}
