@@ -112,15 +112,6 @@ void CtrlImpl::on_json(Json::Object const& obj)
 
 	Event ev;
 	bool ok{false};
-	if (auto type_str = get_if<std::string>(&obj, "type")) {
-		std::tie(ok, ev.type) = event_type(*type_str);
-		if (!ok) {
-			return;
-		}
-	} else {
-		throw std::runtime_error("failed to get event type");
-	}
-
 	if (auto class_str = get_if<std::string>(&obj, "class")) {
 		std::tie(ok, ev.klass) = event_class(*class_str);
 		if (!ok) {
@@ -128,6 +119,15 @@ void CtrlImpl::on_json(Json::Object const& obj)
 		}
 	} else {
 		throw std::runtime_error("failed to get event class");
+	}
+
+	if (auto type_str = get_if<std::string>(&obj, "type")) {
+		std::tie(ok, ev.type) = event_type(*type_str);
+		if (!ok) {
+			return;
+		}
+	} else {
+		throw std::runtime_error("failed to get event type");
 	}
 
 	if (auto accountaor = get_if<std::string>(&obj, "accountaor")) {
