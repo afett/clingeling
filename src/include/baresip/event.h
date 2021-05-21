@@ -25,23 +25,53 @@
 */
 #pragma once
 
-#include "baresip/event.h"
-
-#include <functional>
-#include <memory>
-
-namespace IO {
-class ReadEventBuffer;
-class WriteBuffer;
-}
+#include <string>
+#include <variant>
 
 namespace Baresip {
+namespace Event {
 
-class Ctrl {
-public:
-	static std::unique_ptr<Ctrl> create(IO::ReadEventBuffer &, IO::WriteBuffer &);
-	virtual void on_event(std::function<void(Event::Any const&)> const&) = 0;
-	virtual ~Ctrl() = default;
+enum class Class {
+	Register,
 };
 
-}
+class Register {
+public:
+	enum class Type {
+		Fail,
+		Ok,
+		Unregistering,
+	};
+
+	Type type;
+	std::string accountaor;
+	std::string param;
+};
+
+/*
+class Call {
+public:
+	enum class Type {
+		Established,
+		Incoming,
+		Ringing,
+		Closed,
+	};
+
+	Type type;
+};
+
+class Application {
+public:
+	enum class Type {
+		Shutdown,
+		Exit,
+	};
+
+	Type type;
+};
+*/
+
+using Any = std::variant<Register>;
+
+}}
