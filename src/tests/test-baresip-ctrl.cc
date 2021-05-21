@@ -8,21 +8,23 @@
 namespace UTest {
 
 template <>
-class StringTrait<Baresip::Event> {
+class StringTrait<Baresip::Event::Any> {
 public:
-	static std::string to_string(Baresip::Event const&)
+	static std::string to_string(Baresip::Event::Any const&)
 	{
 		return "";
 	}
 };
 
 template <>
-class EqualTrait<Baresip::Event> {
+class EqualTrait<Baresip::Event::Any> {
 public:
-	static bool equal(Baresip::Event const& l, Baresip::Event const& r)
+	static bool equal(Baresip::Event::Any const& l, Baresip::Event::Any const& r)
 	{
-		return std::tie(l.type, l.klass, l.accountaor, l.param) ==
-			std::tie(r.type, r.klass, r.accountaor, r.param);
+		auto evl = std::get<Baresip::Event::Register>(l);
+		auto evr = std::get<Baresip::Event::Register>(r);
+		return std::tie(evl.type, evl.accountaor, evl.param) ==
+			std::tie(evr.type, evr.accountaor, evr.param);
 	}
 };
 
@@ -55,7 +57,7 @@ public:
 	IO::EventBuffer sendbuf;
 	std::unique_ptr<Baresip::Ctrl> ctrl;
 	bool have_res = false;
-	Baresip::Event res;
+	Baresip::Event::Any res;
 };
 
 UTEST_CASE_WITH_FIXTURE(register_fail_test, EventTestFixture)
@@ -73,11 +75,10 @@ UTEST_CASE_WITH_FIXTURE(register_fail_test, EventTestFixture)
 
 	UTEST_ASSERT(have_res);
 
-	auto expected = Baresip::Event{
-		Baresip::Event::Type::RegisterFail,
-		Baresip::Event::Class::Register,
+	auto expected = Baresip::Event::Any{Baresip::Event::Register{
+		Baresip::Event::Register::Type::Fail,
 		"sip:9999-1@asterisk.example.com",
-		"401 Unauthorized"};
+		"401 Unauthorized"}};
 
 	UTEST_ASSERT_EQUAL(expected, res);
 }
@@ -97,11 +98,10 @@ UTEST_CASE_WITH_FIXTURE(register_ok_test, EventTestFixture)
 
 	UTEST_ASSERT(have_res);
 
-	auto expected = Baresip::Event{
-		Baresip::Event::Type::RegisterOk,
-		Baresip::Event::Class::Register,
+	auto expected = Baresip::Event::Any{Baresip::Event::Register{
+		Baresip::Event::Register::Type::Ok,
 		"sip:9999-1@asterisk.example.com",
-		"200 OK"};
+		"200 OK"}};
 
 	UTEST_ASSERT_EQUAL(expected, res);
 }
@@ -120,11 +120,10 @@ UTEST_CASE_WITH_FIXTURE(unregistering_test, EventTestFixture)
 
 	UTEST_ASSERT(have_res);
 
-	auto expected = Baresip::Event{
-		Baresip::Event::Type::Unregistering,
-		Baresip::Event::Class::Register,
+	auto expected = Baresip::Event::Any{Baresip::Event::Register{
+		Baresip::Event::Register::Type::Unregistering,
 		"sip:9999-1@asterisk.example.com",
-		""};
+		""}};
 
 	UTEST_ASSERT_EQUAL(expected, res);
 }

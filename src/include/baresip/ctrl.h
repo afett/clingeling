@@ -28,6 +28,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <variant>
 
 namespace IO {
 class ReadEventBuffer;
@@ -36,28 +37,57 @@ class WriteBuffer;
 
 namespace Baresip {
 
-class Event {
+namespace Event {
+
+enum class Class {
+	Register,
+};
+
+class Register {
 public:
 	enum class Type {
-		RegisterFail,
-		RegisterOk,
+		Fail,
+		Ok,
 		Unregistering,
 	};
 
-	enum class Class {
-		Register,
-	};
-
 	Type type;
-	Class klass;
 	std::string accountaor;
 	std::string param;
 };
 
+using Any = std::variant<Register>;
+
+}
+
+/*
+class CallEvent {
+public:
+	enum class Type {
+		CallEstablished,
+		CallIncoming,
+		CallRinging,
+		CallClosed,
+	};
+
+	Type type;
+};
+
+class ApplicationEvent {
+public:
+	enum class Type {
+		Shutdown,
+		Exit,
+	};
+
+	Type type;
+};
+*/
+
 class Ctrl {
 public:
 	static std::unique_ptr<Ctrl> create(IO::ReadEventBuffer &, IO::WriteBuffer &);
-	virtual void on_event(std::function<void(Event const&)> const&) = 0;
+	virtual void on_event(std::function<void(Event::Any const&)> const&) = 0;
 	virtual ~Ctrl() = default;
 };
 

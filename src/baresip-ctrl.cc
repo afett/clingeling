@@ -17,7 +17,7 @@ namespace Baresip {
 class CtrlImpl : public Ctrl {
 public:
 	explicit CtrlImpl(IO::ReadEventBuffer &, IO::WriteBuffer &);
-	void on_event(std::function<void(Event const&)> const&) final;
+	void on_event(std::function<void(Event::Any const&)> const&) final;
 
 private:
 	void on_json(Json::Object const&);
@@ -25,7 +25,7 @@ private:
 	IO::StreamBuffer recvbuf_;
 	Netstring::Reader netstring_;
 	IO::WriteBuffer & sendbuf_;
-	std::function<void(Event const&)> on_event_;
+	std::function<void(Event::Any const&)> on_event_;
 };
 
 std::unique_ptr<Ctrl> Ctrl::create(IO::ReadEventBuffer & recvbuf, IO::WriteBuffer & sendbuf)
@@ -48,7 +48,7 @@ CtrlImpl::CtrlImpl(IO::ReadEventBuffer & recvbuf, IO::WriteBuffer & sendbuf)
 	});
 }
 
-void CtrlImpl::on_event(std::function<void(Event const&)> const& cb)
+void CtrlImpl::on_event(std::function<void(Event::Any const&)> const& cb)
 {
 	on_event_ = cb;
 }
@@ -67,12 +67,12 @@ std::tuple<bool, T> select(std::string const& str, std::initializer_list<std::tu
 	return {false, T{}};
 }
 
-std::tuple<bool, Event::Type> event_type(std::string const& str)
+std::tuple<bool, Event::Register::Type> event_type(std::string const& str)
 {
-	return select<Event::Type>(str, {
-		{"REGISTER_OK", Event::Type::RegisterOk},
-		{"REGISTER_FAIL", Event::Type::RegisterFail},
-		{"UNREGISTERING", Event::Type::Unregistering},
+	return select<Event::Register::Type>(str, {
+		{"REGISTER_OK", Event::Register::Type::Ok},
+		{"REGISTER_FAIL", Event::Register::Type::Fail},
+		{"UNREGISTERING", Event::Register::Type::Unregistering},
 	});
 }
 
@@ -102,29 +102,14 @@ bool is_event(Json::Object const& obj)
 	return false;
 }
 
-}
-
-void CtrlImpl::on_json(Json::Object const& obj)
+Event::Register parse_event(Json::Object const& obj)
 {
-	if (!is_event(obj)) {
-		return;
-	}
-
-	Event ev;
+	Event::Register ev;
 	bool ok{false};
-	if (auto class_str = get_if<std::string>(&obj, "class")) {
-		std::tie(ok, ev.klass) = event_class(*class_str);
-		if (!ok) {
-			return;
-		}
-	} else {
-		throw std::runtime_error("failed to get event class");
-	}
-
 	if (auto type_str = get_if<std::string>(&obj, "type")) {
 		std::tie(ok, ev.type) = event_type(*type_str);
 		if (!ok) {
-			return;
+			throw std::runtime_error("unknown event type");
 		}
 	} else {
 		throw std::runtime_error("failed to get event type");
@@ -140,7 +125,27 @@ void CtrlImpl::on_json(Json::Object const& obj)
 		ev.param = *param;
 	}
 
-	on_event_(ev);
+	return ev;
+}
+
+}
+
+void CtrlImpl::on_json(Json::Object const& obj)
+{
+	if (!is_event(obj)) {
+		return;
+	}
+
+	if (auto class_str = get_if<std::string>(&obj, "class")) {
+		auto [ok, klass] = event_class(*class_str);
+		if (!ok) {
+			return;
+		}
+	} else {
+		throw std::runtime_error("failed to get event class");
+	}
+
+	on_event_(parse_event(obj));
 }
 
 }
