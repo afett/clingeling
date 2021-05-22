@@ -39,17 +39,6 @@ std::tuple<bool, Register::Type> event_type(std::string const& str)
 	);
 }
 
-enum class Class {
-	Register,
-};
-
-std::tuple<bool, Class> event_class(std::string const& str)
-{
-	return select(str,
-		"register", Class::Register
-	);
-}
-
 template <typename T>
 std::add_pointer_t<const T> get_if(Json::Object const* obj, const char* name)
 {
@@ -104,15 +93,18 @@ std::tuple<bool, Any> parse(Json::Object const& obj)
 	}
 
 	if (auto class_str = get_if<std::string>(&obj, "class")) {
-		auto [ok, klass] = event_class(*class_str);
-		if (!ok) {
-			return {false, {}};
+		auto [ok, parser] = select(*class_str,
+			"register", &parse_register_event
+		);
+
+		if (ok) {
+			return {true, parser(obj)};
 		}
 	} else {
 		throw std::runtime_error("failed to get event class");
 	}
 
-	return {true, parse_register_event(obj)};
+	return {false, {}};
 }
 
 }}
