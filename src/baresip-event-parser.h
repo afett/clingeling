@@ -11,7 +11,8 @@
 #include <tuple>
 
 namespace Baresip {
+namespace Event {
 
-std::tuple<bool, Event::Any> parse_event(Json::Object const&);
+std::tuple<bool, Any> parse(Json::Object const&);
 
-}
+}}

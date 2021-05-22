@@ -56,7 +56,7 @@ void CtrlImpl::on_event(std::function<void(Event::Any const&)> const& cb)
 
 void CtrlImpl::on_json(Json::Object const& obj)
 {
-	auto [is_event, ev] = parse_event(obj);
+	auto [is_event, ev] = Event::parse(obj);
 	if (is_event) {
 		on_event_(ev);
 	}

@@ -6,6 +6,7 @@
 #include "baresip-event-parser.h"
 
 namespace Baresip {
+namespace Event {
 
 namespace {
 
@@ -29,12 +30,12 @@ auto select(K const& cmp, Args ...args) -> decltype(select_helper(cmp, args...))
 	return select_helper(cmp, args...);
 }
 
-std::tuple<bool, Event::Register::Type> event_type(std::string const& str)
+std::tuple<bool, Register::Type> event_type(std::string const& str)
 {
 	return select(str,
-		"REGISTER_OK", Event::Register::Type::Ok,
-		"REGISTER_FAIL", Event::Register::Type::Fail,
-		"UNREGISTERING", Event::Register::Type::Unregistering
+		"REGISTER_OK", Register::Type::Ok,
+		"REGISTER_FAIL", Register::Type::Fail,
+		"UNREGISTERING", Register::Type::Unregistering
 	);
 }
 
@@ -68,7 +69,7 @@ bool is_event(Json::Object const& obj)
 	return false;
 }
 
-Event::Register parse_register_event(Json::Object const& obj)
+Register parse_register_event(Json::Object const& obj)
 {
 	Event::Register ev;
 	bool ok{false};
@@ -96,7 +97,7 @@ Event::Register parse_register_event(Json::Object const& obj)
 
 }
 
-std::tuple<bool, Event::Any> parse_event(Json::Object const& obj)
+std::tuple<bool, Any> parse(Json::Object const& obj)
 {
 	if (!is_event(obj)) {
 		return {false, Event::Any{}};
@@ -114,5 +115,4 @@ std::tuple<bool, Event::Any> parse_event(Json::Object const& obj)
 	return {true, parse_register_event(obj)};
 }
 
-}
-
+}}
