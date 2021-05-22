@@ -8,10 +8,10 @@
 #include "baresip/event.h"
 #include "json/types.h"
 
-#include <utility>
+#include <tuple>
 
 namespace Baresip {
 
-std::pair<bool, Event::Any> parse_event(Json::Object const&);
+std::tuple<bool, Event::Any> parse_event(Json::Object const&);
 
 }

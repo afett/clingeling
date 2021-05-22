@@ -84,8 +84,7 @@ Event::Register parse_register_event(Json::Object const& obj)
 
 }
 
-
-std::pair<bool, Event::Any> parse_event(Json::Object const& obj)
+std::tuple<bool, Event::Any> parse_event(Json::Object const& obj)
 {
 	if (!is_event(obj)) {
 		return {false, Event::Any{}};
