@@ -52,10 +52,8 @@ std::add_pointer_t<const T> get_if(Json::Object const* obj, const char* name)
 
 bool is_event(Json::Object const& obj)
 {
-	if (auto event = get_if<bool>(&obj, "event")) {
-		return *event;
-	}
-	return false;
+	auto is_ev = get_if<bool>(&obj, "event");
+	return is_ev ? *is_ev : false;
 }
 
 Register parse_register_event(Json::Object const& obj)
