@@ -9,32 +9,40 @@ namespace Baresip {
 
 namespace {
 
-template <typename T>
-std::tuple<bool, T> select(std::string const& str, std::initializer_list<std::tuple<std::string, T>> map)
+template <typename K, typename KK, typename V, typename ...Args>
+std::tuple<bool, V> select_helper(K const& cmp, KK const& key, V const& res, Args ...args)
 {
-	for (auto const& mapping : map) {
-		if (str == std::get<0>(mapping)) {
-			return {true, std::get<1>(mapping)};
-		}
+	if (cmp == key) {
+		return {true, res};
 	}
 
-	return {false, T{}};
+	if constexpr (sizeof...(args)) {
+		return select_helper(cmp, args...);
+	}
+
+	return {false, {}};
+}
+
+template <typename K, typename ...Args>
+auto select(K const& cmp, Args ...args) -> decltype(select_helper(cmp, args...))
+{
+	return select_helper(cmp, args...);
 }
 
 std::tuple<bool, Event::Register::Type> event_type(std::string const& str)
 {
-	return select<Event::Register::Type>(str, {
-		{"REGISTER_OK", Event::Register::Type::Ok},
-		{"REGISTER_FAIL", Event::Register::Type::Fail},
-		{"UNREGISTERING", Event::Register::Type::Unregistering},
-	});
+	return select(str,
+		"REGISTER_OK", Event::Register::Type::Ok,
+		"REGISTER_FAIL", Event::Register::Type::Fail,
+		"UNREGISTERING", Event::Register::Type::Unregistering
+	);
 }
 
 std::tuple<bool, Event::Class> event_class(std::string const& str)
 {
-	return select<Event::Class>(str, {
-		{"register", Event::Class::Register},
-	});
+	return select(str,
+		"register", Event::Class::Register
+	);
 }
 
 template <typename T>
