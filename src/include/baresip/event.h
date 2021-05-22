@@ -31,10 +31,6 @@
 namespace Baresip {
 namespace Event {
 
-enum class Class {
-	Register,
-};
-
 class Register {
 public:
 	enum class Type {

@@ -38,10 +38,14 @@ std::tuple<bool, Event::Register::Type> event_type(std::string const& str)
 	);
 }
 
-std::tuple<bool, Event::Class> event_class(std::string const& str)
+enum class Class {
+	Register,
+};
+
+std::tuple<bool, Class> event_class(std::string const& str)
 {
 	return select(str,
-		"register", Event::Class::Register
+		"register", Class::Register
 	);
 }
 
