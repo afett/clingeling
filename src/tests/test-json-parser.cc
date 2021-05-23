@@ -143,4 +143,28 @@ UTEST_CASE(null_test)
 	UTEST_ASSERT_EQUAL(nullptr, Json::get<nullptr_t>(o["foo"]));
 }
 
+UTEST_CASE(number_test)
+{
+	std::stringstream is{
+		"["
+			"0, +0, -0, 1, +1, -1"
+		"]"
+	};
+	auto a = Json::parse_array(is);
+	UTEST_ASSERT(!a.empty());
+	UTEST_ASSERT_EQUAL(size_t(6), a.size());
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[0]));
+	UTEST_ASSERT_EQUAL(int64_t(0), Json::get<int64_t>(a[0]));
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[1]));
+	UTEST_ASSERT_EQUAL(int64_t(0), Json::get<int64_t>(a[1]));
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[2]));
+	UTEST_ASSERT_EQUAL(int64_t(0), Json::get<int64_t>(a[2]));
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[3]));
+	UTEST_ASSERT_EQUAL(int64_t(1), Json::get<int64_t>(a[3]));
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[4]));
+	UTEST_ASSERT_EQUAL(int64_t(1), Json::get<int64_t>(a[4]));
+	UTEST_ASSERT(Json::holds_alternative<int64_t>(a[5]));
+	UTEST_ASSERT_EQUAL(int64_t(-1), Json::get<int64_t>(a[5]));
+}
+
 }}

@@ -45,6 +45,13 @@ T parse_bareword(std::istream & in, std::string const& word, T value)
 	return value;
 }
 
+int64_t parse_number(std::istream & in)
+{
+	int64_t res{0};
+	in >> res;
+	return res;
+}
+
 Json::Value parse_value(std::istream & in, size_t depth)
 {
 	if (++depth > 256) {
@@ -59,8 +66,8 @@ Json::Value parse_value(std::istream & in, size_t depth)
 	case 't': return Json::Value{parse_bareword(in, "true", true)};
 	case 'f': return Json::Value{parse_bareword(in, "false", false)};
 	case 'n': return Json::Value{parse_bareword(in, "null", nullptr)};
-	case '+': case '-': case '1'...'9':
-		  throw std::runtime_error("parse_value: number unimplemented");
+	case '+': case '-': case '0'...'9':
+		  return Json::Value{parse_number(in)};
 	default:
 		  throw std::runtime_error("parse_value: invalid char");
 	}
