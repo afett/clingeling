@@ -5,6 +5,8 @@
 */
 #include "baresip-event-parser.h"
 
+#include <functional>
+
 namespace Baresip {
 namespace Event {
 
@@ -30,54 +32,50 @@ auto select(K const& cmp, Args ...args) -> decltype(select_helper(cmp, args...))
 	return select_helper(cmp, args...);
 }
 
-std::tuple<bool, Register::Type> event_type(std::string const& str)
-{
-	return select(str,
-		"REGISTER_OK", Register::Type::Ok,
-		"REGISTER_FAIL", Register::Type::Fail,
-		"UNREGISTERING", Register::Type::Unregistering
-	);
-}
-
 template <typename T>
-std::add_pointer_t<const T> get_if(Json::Object const* obj, const char* name)
+std::tuple<bool, T> get_member(Json::Object const& obj, std::string const& name)
 {
-	auto member = obj->find(std::string(name));
-	if (member == std::end(*obj)) {
-		return nullptr;
+	auto member = obj.find(std::string(name));
+	if (member == std::end(obj)) {
+		return {false, {}};
 	}
 
-	return Json::get_if<T>(&member->second);
+	auto value = Json::get_if<T>(&member->second);
+	if (!value) {
+		return {false, {}};
+	}
+
+	return {true, *value};
 }
 
 bool is_event(Json::Object const& obj)
 {
-	auto is_ev = get_if<bool>(&obj, "event");
-	return is_ev ? *is_ev : false;
+	auto is_ev = get_member<bool>(obj, "event");
+	return std::get<0>(is_ev) && std::get<1>(is_ev);
 }
 
 Register parse_register_event(Json::Object const& obj)
 {
 	Event::Register ev;
-	bool ok{false};
-	if (auto type_str = get_if<std::string>(&obj, "type")) {
-		std::tie(ok, ev.type) = event_type(*type_str);
-		if (!ok) {
-			throw std::runtime_error("unknown event type");
-		}
-	} else {
+	auto [ok, type_str] = get_member<std::string>(obj, "type");
+	if (!ok) {
 		throw std::runtime_error("failed to get event type");
 	}
+	std::tie(ok, ev.type) = select(type_str,
+		"REGISTER_OK", Register::Type::Ok,
+		"REGISTER_FAIL", Register::Type::Fail,
+		"UNREGISTERING", Register::Type::Unregistering
+	);
+	if (!ok) {
+		throw std::runtime_error("failed to translate event type");
+	}
 
-	if (auto accountaor = get_if<std::string>(&obj, "accountaor")) {
-		ev.accountaor = *accountaor;
-	} else {
+	std::tie(ok, ev.accountaor) = get_member<std::string>(obj, "accountaor");
+	if (!ok) {
 		throw std::runtime_error("failed to get event accountaor");
 	}
 
-	if (auto param = get_if<std::string>(&obj, "param")) {
-		ev.param = *param;
-	}
+	std::tie(ok, ev.param) = get_member<std::string>(obj, "param");
 
 	return ev;
 }
@@ -90,16 +88,18 @@ std::tuple<bool, Any> parse(Json::Object const& obj)
 		return {false, Event::Any{}};
 	}
 
-	if (auto class_str = get_if<std::string>(&obj, "class")) {
-		auto [ok, parser] = select(*class_str,
-			"register", &parse_register_event
-		);
-
-		if (ok) {
-			return {true, parser(obj)};
-		}
-	} else {
+	auto [ok, class_str] = get_member<std::string>(obj, "class");
+	if (!ok) {
 		throw std::runtime_error("failed to get event class");
+	}
+
+	std::function<Register(Json::Object)> parser;
+	std::tie(ok, parser) = select(class_str,
+		"register", &parse_register_event
+	);
+
+	if (ok) {
+		return {true, parser(obj)};
 	}
 
 	return {false, {}};
