@@ -349,14 +349,29 @@ UTEST_CASE_WITH_FIXTURE(call_rtcp_test, EventTestFixture)
 	UTEST_ASSERT(!have_res);
 }
 
+UTEST_CASE_WITH_FIXTURE(vu_report_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"VU_RX_REPORT\","
+		"\"class\":\"VU_REPORT\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"incoming\","
+		"\"peeruri\":\"sip:7777@192.168.55.1:5060\","
+		"\"id\":\"5726089069c0f5d0476be4b315354199@192.168.55.2:5060\","
+		"\"param\":\"-60.22\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(!have_res);
+}
+
 /*
 
 {"event":true,"type":"EXIT","class":"application"},
 {"event":true,"type":"SHUTDOWN","class":"application","accountaor":"sip:9999-1@asterisk.example.com"}
-{"event":true,"type":"VU_RX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"-60.22"}
-{"event":true,"type":"VU_RX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"-13.58"}
-{"event":true,"type":"VU_TX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"-13.96"}
-{"event":true,"type":"VU_TX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"-14.54"}
 
 */
 
