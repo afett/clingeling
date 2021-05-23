@@ -44,7 +44,6 @@ public:
 	std::string param;
 };
 
-/*
 class Call {
 public:
 	enum class Type {
@@ -54,9 +53,20 @@ public:
 		Closed,
 	};
 
+	enum class Direction {
+		Incoming,
+		Outgoing,
+	};
+
 	Type type;
+	std::string accountaor;
+	Direction direction;
+	std::string peeruri;
+	std::string id;
+	std::string param;
 };
 
+/*
 class Application {
 public:
 	enum class Type {
@@ -68,6 +78,6 @@ public:
 };
 */
 
-using Any = std::variant<Register>;
+using Any = std::variant<Register, Call>;
 
 }}

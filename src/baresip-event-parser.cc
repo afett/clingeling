@@ -54,7 +54,7 @@ bool is_event(Json::Object const& obj)
 	return std::get<0>(is_ev) && std::get<1>(is_ev);
 }
 
-Register parse_register_event(Json::Object const& obj)
+std::tuple<bool, Any> parse_register_event(Json::Object const& obj)
 {
 	Event::Register ev;
 	auto [ok, type_str] = get_member<std::string>(obj, "type");
@@ -67,7 +67,7 @@ Register parse_register_event(Json::Object const& obj)
 		"UNREGISTERING", Register::Type::Unregistering
 	);
 	if (!ok) {
-		throw std::runtime_error("failed to translate register event type");
+		return {false, {}};
 	}
 
 	std::tie(ok, ev.accountaor) = get_member<std::string>(obj, "accountaor");
@@ -75,9 +75,58 @@ Register parse_register_event(Json::Object const& obj)
 		throw std::runtime_error("failed to get register event accountaor");
 	}
 
-	std::tie(ok, ev.param) = get_member<std::string>(obj, "param");
+	std::tie(std::ignore, ev.param) = get_member<std::string>(obj, "param");
 
-	return ev;
+	return {true, ev};
+}
+
+std::tuple<bool, Any> parse_call_event(Json::Object const& obj)
+{
+	Event::Call ev;
+	auto [ok, str] = get_member<std::string>(obj, "type");
+	if (!ok) {
+		throw std::runtime_error("failed to get call event type");
+	}
+	std::tie(ok, ev.type) = select(str,
+		"CALL_CLOSED", Call::Type::Closed,
+		"CALL_ESTABLISHED", Call::Type::Established,
+		"CALL_INCOMING", Call::Type::Incoming,
+		"CALL_RINGING", Call::Type::Ringing
+	);
+	if (!ok) {
+		return {false, {}};
+	}
+
+	std::tie(ok, ev.accountaor) = get_member<std::string>(obj, "accountaor");
+	if (!ok) {
+		throw std::runtime_error("failed to get call event accountaor");
+	}
+
+	std::tie(ok, str) = get_member<std::string>(obj, "direction");
+	if (!ok) {
+		throw std::runtime_error("failed to get call event driection");
+	}
+	std::tie(ok, ev.direction) = select(str,
+		"incoming", Call::Direction::Incoming,
+		"outgoing", Call::Direction::Outgoing
+	);
+	if (!ok) {
+		throw std::runtime_error("failed to translate call event direction");
+	}
+
+	std::tie(ok, ev.peeruri) = get_member<std::string>(obj, "peeruri");
+	if (!ok) {
+		throw std::runtime_error("failed to get call event peeruri");
+	}
+
+	std::tie(ok, ev.id) = get_member<std::string>(obj, "id");
+	if (!ok) {
+		throw std::runtime_error("failed to get call event id");
+	}
+
+	std::tie(std::ignore, ev.param) = get_member<std::string>(obj, "param");
+
+	return {true, ev};
 }
 
 }
@@ -93,16 +142,16 @@ std::tuple<bool, Any> parse(Json::Object const& obj)
 		throw std::runtime_error("failed to get event class");
 	}
 
-	std::function<Register(Json::Object)> parser;
+	decltype(&parse_register_event) parser;
 	std::tie(ok, parser) = select(class_str,
-		"register", &parse_register_event
+		"register", &parse_register_event,
+		"call", &parse_call_event
 	);
-
-	if (ok) {
-		return {true, parser(obj)};
+	if (!ok) {
+		return {false, {}};
 	}
 
-	return {false, {}};
+	return parser(obj);
 }
 
 }}

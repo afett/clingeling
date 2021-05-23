@@ -16,15 +16,42 @@ public:
 	}
 };
 
+struct AnyEventEqual {
+public:
+	AnyEventEqual(Baresip::Event::Any const& ev)
+	:
+		ev_(ev)
+	{ }
+
+	bool operator()(Baresip::Event::Register const& r) const
+	{
+		if (!std::holds_alternative<Baresip::Event::Register>(ev_)) {
+			return false;
+		}
+		auto l = std::get<Baresip::Event::Register>(ev_);
+		return std::tie(l.type, l.accountaor, l.param) ==
+			std::tie(r.type, r.accountaor, r.param);
+	}
+
+	bool operator()(Baresip::Event::Call const& r) const
+	{
+		if (!std::holds_alternative<Baresip::Event::Call>(ev_)) {
+			return false;
+		}
+		auto l = std::get<Baresip::Event::Call>(ev_);
+		return std::tie(l.type, l.accountaor, l.direction, l.peeruri, l.id, l.param) ==
+			std::tie(r.type, r.accountaor, r.direction, r.peeruri, r.id, r.param);
+	}
+private:
+	Baresip::Event::Any ev_;
+};
+
 template <>
 class EqualTrait<Baresip::Event::Any> {
 public:
 	static bool equal(Baresip::Event::Any const& l, Baresip::Event::Any const& r)
 	{
-		auto evl = std::get<Baresip::Event::Register>(l);
-		auto evr = std::get<Baresip::Event::Register>(r);
-		return std::tie(evl.type, evl.accountaor, evl.param) ==
-			std::tie(evr.type, evr.accountaor, evr.param);
+		return std::visit(AnyEventEqual(l), r);
 	}
 };
 
@@ -128,17 +155,202 @@ UTEST_CASE_WITH_FIXTURE(unregistering_test, EventTestFixture)
 	UTEST_ASSERT_EQUAL(expected, res);
 }
 
+UTEST_CASE_WITH_FIXTURE(call_closed_incoming_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_CLOSED\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"incoming\","
+		"\"peeruri\":\"sip:7777@192.168.55.1:5060\","
+		"\"id\":\"5726089069c0f5d0476be4b315354199@192.168.55.2:5060\","
+		"\"param\":\"Connection reset by user\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Closed,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Incoming,
+		"sip:7777@192.168.55.1:5060",
+		"5726089069c0f5d0476be4b315354199@192.168.55.2:5060",
+		"Connection reset by user"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_closed_outgoing_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_CLOSED\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"outgoing\","
+		"\"peeruri\":\"sip:7777@asterisk.example.com;transport=udp\","
+		"\"id\":\"6d42101ce49915a3\","
+		"\"param\":\"Connection reset by user\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Closed,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Outgoing,
+		"sip:7777@asterisk.example.com;transport=udp",
+		"6d42101ce49915a3",
+		"Connection reset by user"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_established_incoming_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_ESTABLISHED\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"incoming\","
+		"\"peeruri\":\"sip:7777@192.168.55.1:5060\","
+		"\"id\":\"5726089069c0f5d0476be4b315354199@192.168.55.2:5060\","
+		"\"param\":\"sip:7777@192.168.55.1:5060\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Established,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Incoming,
+		"sip:7777@192.168.55.1:5060",
+		"5726089069c0f5d0476be4b315354199@192.168.55.2:5060",
+		"sip:7777@192.168.55.1:5060"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_established_outgoing_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_ESTABLISHED\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"outgoing\","
+		"\"peeruri\":\"sip:7777@asterisk.example.com;transport=udp\","
+		"\"id\":\"6d42101ce49915a3\","
+		"\"param\":\"sip:7777@asterisk.example.com;transport=udp\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Established,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Outgoing,
+		"sip:7777@asterisk.example.com;transport=udp",
+		"6d42101ce49915a3",
+		"sip:7777@asterisk.example.com;transport=udp"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_incoming_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_INCOMING\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"incoming\","
+		"\"peeruri\":\"sip:7777@192.168.55.1:5060\","
+		"\"id\":\"5726089069c0f5d0476be4b315354199@192.168.55.2:5060\","
+		"\"param\":\"sip:7777@192.168.55.1:5060\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Incoming,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Incoming,
+		"sip:7777@192.168.55.1:5060",
+		"5726089069c0f5d0476be4b315354199@192.168.55.2:5060",
+		"sip:7777@192.168.55.1:5060"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_ringing_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_RINGING\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"outgoing\","
+		"\"peeruri\":\"sip:7777@asterisk.example.com;transport=udp\","
+		"\"id\":\"6d42101ce49915a3\","
+		"\"param\":\"sip:7777@asterisk.example.com;transport=udp\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Call{
+		Baresip::Event::Call::Type::Ringing,
+		"sip:9999-1@asterisk.example.com",
+		Baresip::Event::Call::Direction::Outgoing,
+		"sip:7777@asterisk.example.com;transport=udp",
+		"6d42101ce49915a3",
+		"sip:7777@asterisk.example.com;transport=udp"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(call_rtcp_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"CALL_RTCP\","
+		"\"class\":\"call\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"direction\":\"incoming\","
+		"\"peeruri\":\"sip:7777@192.168.55.1:5060\","
+		"\"id\":\"5726089069c0f5d0476be4b315354199@192.168.55.2:5060\","
+		"\"param\":\"audio\","
+		"\"rtcp_stats\":{\"tx\":{\"sent\":9752,\"lost\":0,\"jit\":1625},\"rx\":{\"sent\":1,\"lost\":0,\"jit\":0},\"rtt\":24995}"
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(!have_res);
+}
+
 /*
 
-{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"Connection reset by user"}
-{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"Connection reset by user"}
-{"event":true,"type":"CALL_CLOSED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"9e62dfd55fe6aa7d","param":"No such device"}
-{"event":true,"type":"CALL_ESTABLISHED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"sip:7777@192.168.55.1:5060"}
-{"event":true,"type":"CALL_ESTABLISHED","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"sip:7777@asterisk.example.com;transport=udp"}
-{"event":true,"type":"CALL_INCOMING","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"sip:7777@192.168.55.1:5060"}
-{"event":true,"type":"CALL_RINGING","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"sip:7777@asterisk.example.com;transport=udp"}
-{"event":true,"type":"CALL_RTCP","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"audio","rtcp_stats":{"tx":{"sent":9752,"lost":0,"jit":1625},"rx":{"sent":1,"lost":0,"jit":0},"rtt":24995}}
-{"event":true,"type":"CALL_RTCP","class":"call","accountaor":"sip:9999-1@asterisk.example.com","direction":"outgoing","peeruri":"sip:7777@asterisk.example.com;transport=udp","id":"6d42101ce49915a3","param":"audio","rtcp_stats":{"tx":{"sent":10002,"lost":0,"jit":1500},"rx":{"sent":0,"lost":0,"jit":0},"rtt":25284}}
 {"event":true,"type":"EXIT","class":"application"},
 {"event":true,"type":"SHUTDOWN","class":"application","accountaor":"sip:9999-1@asterisk.example.com"}
 {"event":true,"type":"VU_RX_REPORT","class":"VU_REPORT","accountaor":"sip:9999-1@asterisk.example.com","direction":"incoming","peeruri":"sip:7777@192.168.55.1:5060","id":"5726089069c0f5d0476be4b315354199@192.168.55.2:5060","param":"-60.22"}
