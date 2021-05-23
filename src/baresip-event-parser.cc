@@ -59,7 +59,7 @@ Register parse_register_event(Json::Object const& obj)
 	Event::Register ev;
 	auto [ok, type_str] = get_member<std::string>(obj, "type");
 	if (!ok) {
-		throw std::runtime_error("failed to get event type");
+		throw std::runtime_error("failed to get register event type");
 	}
 	std::tie(ok, ev.type) = select(type_str,
 		"REGISTER_OK", Register::Type::Ok,
@@ -67,12 +67,12 @@ Register parse_register_event(Json::Object const& obj)
 		"UNREGISTERING", Register::Type::Unregistering
 	);
 	if (!ok) {
-		throw std::runtime_error("failed to translate event type");
+		throw std::runtime_error("failed to translate register event type");
 	}
 
 	std::tie(ok, ev.accountaor) = get_member<std::string>(obj, "accountaor");
 	if (!ok) {
-		throw std::runtime_error("failed to get event accountaor");
+		throw std::runtime_error("failed to get register event accountaor");
 	}
 
 	std::tie(ok, ev.param) = get_member<std::string>(obj, "param");
