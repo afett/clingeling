@@ -145,7 +145,7 @@ std::tuple<bool, Any> parse_call_event(Json::Object const& obj)
 std::tuple<bool, Any> parse(Json::Object const& obj)
 {
 	if (!is_event(obj)) {
-		return {false, Event::Any{}};
+		return {false, {}};
 	}
 
 	auto [ok, class_str] = get_member<std::string>(obj, "class");
