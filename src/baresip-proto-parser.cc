@@ -3,12 +3,10 @@
    Use of this source code is governed by a BSD-style
    license that can be found in the LICENSE file.
 */
-#include "baresip-event-parser.h"
+#include "baresip-proto-parser.h"
+#include "baresip/command.h"
 
 #include <functional>
-
-namespace Baresip {
-namespace Event {
 
 namespace {
 
@@ -53,6 +51,19 @@ bool is_event(Json::Object const& obj)
 	auto is_ev = get_member<bool>(obj, "event");
 	return std::get<0>(is_ev) && std::get<1>(is_ev);
 }
+
+bool is_response(Json::Object const& obj)
+{
+	auto is_resp = get_member<bool>(obj, "response");
+	return std::get<0>(is_resp) && std::get<1>(is_resp);
+}
+
+}
+
+namespace Baresip {
+namespace Event {
+
+namespace {
 
 std::tuple<bool, Any> parse_register_event(Json::Object const& obj)
 {
@@ -152,6 +163,33 @@ std::tuple<bool, Any> parse(Json::Object const& obj)
 	}
 
 	return parser(obj);
+}
+
+} // Event
+
+namespace Command {
+
+std::tuple<bool, Response> parse(Json::Object const& obj)
+{
+	if (!is_response(obj)) {
+		return {false, {}};
+	}
+
+	Response resp;
+	auto ok{false};
+	std::tie(ok, resp.ok) = get_member<bool>(obj, "ok");
+	if (!ok) {
+		throw std::runtime_error("failed to get response ok state");
+	}
+
+	std::tie(ok, resp.data) = get_member<std::string>(obj, "data");
+	if (!ok) {
+		throw std::runtime_error("failed to get response data");
+	}
+
+	std::tie(std::ignore, resp.token) = get_member<std::string>(obj, "token");
+
+	return {true, resp};
 }
 
 }}

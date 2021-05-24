@@ -1,6 +1,7 @@
 #include "utest/macros.h"
 
 #include "baresip/ctrl.h"
+#include "baresip/command.h"
 #include "io/event-buffer.h"
 
 #include "utest/assertion-traits.h"
@@ -55,21 +56,39 @@ public:
 	}
 };
 
+template <>
+class StringTrait<Baresip::Command::Response> {
+public:
+	static std::string to_string(Baresip::Command::Response const&)
+	{
+		return "";
+	}
+};
+
+template <>
+class EqualTrait<Baresip::Command::Response> {
+public:
+	static bool equal(Baresip::Command::Response const& l, Baresip::Command::Response const& r)
+	{
+		return std::tie(l.ok, l.data, l.token) ==
+			std::tie(r.ok, r.data, r.token);
+	}
+};
+
 }
 
 namespace unittests {
 namespace baresip_ctrl {
 
-class EventTestFixture {
+class CtrlTestFixture {
 public:
-	EventTestFixture()
+	CtrlTestFixture()
 	:
 		recvbuf{4096},
 		sendbuf{4096},
 		ctrl{Baresip::Ctrl::create(recvbuf, sendbuf)}
 	{
 		recvbuf.on_drain([]() {});
-		ctrl->on_event([this] (auto const& ev) { have_res = true; res = ev; });
 	}
 
 	void send_data(std::string const& str)
@@ -84,7 +103,26 @@ public:
 	IO::EventBuffer sendbuf;
 	std::unique_ptr<Baresip::Ctrl> ctrl;
 	bool have_res = false;
+};
+
+class EventTestFixture : public CtrlTestFixture {
+public:
+	EventTestFixture()
+	{
+		ctrl->on_event([this] (auto const& ev) { have_res = true; res = ev; });
+	}
+
 	Baresip::Event::Any res;
+};
+
+class CommandTestFixture : public CtrlTestFixture {
+public:
+	CommandTestFixture()
+	{
+		ctrl->on_response([this] (auto const& resp) { have_res = true; res = resp; });
+	}
+
+	Baresip::Command::Response res;
 };
 
 UTEST_CASE_WITH_FIXTURE(register_fail_test, EventTestFixture)
@@ -366,6 +404,28 @@ UTEST_CASE_WITH_FIXTURE(vu_report_test, EventTestFixture)
 	send_data(data);
 
 	UTEST_ASSERT(!have_res);
+}
+
+UTEST_CASE_WITH_FIXTURE(response_test, CommandTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"response\":true,"
+		"\"ok\":true,"
+		"\"data\":\"\","
+		"\"token\":\"01AAFE489\""
+		"}"
+	};
+	send_data(data);
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Command::Response{
+		true,
+		"",
+		"01AAFE489"};
+
+	UTEST_ASSERT_EQUAL(expected, res);
 }
 
 /*

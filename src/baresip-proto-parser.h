@@ -11,8 +11,14 @@
 #include <tuple>
 
 namespace Baresip {
+
 namespace Event {
-
 std::tuple<bool, Any> parse(Json::Object const&);
+}
 
-}}
+namespace Command {
+class Response;
+std::tuple<bool, Response> parse(Json::Object const&);
+}
+
+}

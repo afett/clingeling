@@ -25,27 +25,14 @@
 */
 #pragma once
 
-#include "baresip/event.h"
-
-#include <functional>
-#include <memory>
-
-namespace IO {
-class ReadEventBuffer;
-class WriteBuffer;
-}
-
 namespace Baresip {
 namespace Command {
-class Response;
-}
 
-class Ctrl {
+class Response {
 public:
-	static std::unique_ptr<Ctrl> create(IO::ReadEventBuffer &, IO::WriteBuffer &);
-	virtual void on_event(std::function<void(Event::Any const&)> const&) = 0;
-	virtual void on_response(std::function<void(Command::Response const&)> const&) = 0;
-	virtual ~Ctrl() = default;
+	bool ok = false;
+	std::string data;
+	std::string token;
 };
 
-}
+}}
