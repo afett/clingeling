@@ -13,6 +13,7 @@
 #include "baresip-proto-parser.h"
 
 #include <sstream>
+#include <iostream>
 
 namespace Baresip {
 
@@ -23,7 +24,7 @@ public:
 	void on_response(std::function<void(Command::Response const&)> const&) final;
 
 private:
-	void on_json(Json::Object const&);
+	bool on_json(Json::Object const&);
 
 	IO::StreamBuffer recvbuf_;
 	Netstring::Reader netstring_;
@@ -47,7 +48,13 @@ CtrlImpl::CtrlImpl(IO::ReadEventBuffer & recvbuf, IO::WriteBuffer & sendbuf)
 		auto data = std::string{};
 		if (netstring_.parse(data)) {
 			std::stringstream ss{data};
-			on_json(Json::parse_object(ss));
+			try {
+				if (!on_json(Json::parse_object(ss))) {
+					std::cerr << "failed to handel: '" << data << "'\n";
+				}
+			} catch (std::runtime_error const& e) {
+				std::cerr << e.what() << ": '" << data << "'\n";
+			}
 		}
 	});
 }
@@ -62,7 +69,7 @@ void CtrlImpl::on_response(std::function<void(Command::Response const&)> const& 
 	on_response_ = cb;
 }
 
-void CtrlImpl::on_json(Json::Object const& obj)
+bool CtrlImpl::on_json(Json::Object const& obj)
 {
 	auto [is_event, ev] = Event::parse(obj);
 	if (is_event) {
@@ -73,6 +80,8 @@ void CtrlImpl::on_json(Json::Object const& obj)
 	if (is_resp) {
 		on_response_(resp);
 	}
+
+	return is_event || is_resp;
 }
 
 }
