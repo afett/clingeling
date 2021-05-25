@@ -11,20 +11,6 @@
 #include "buffered-stream-socket.h"
 #include "baresip/ctrl.h"
 
-#include <system_error>
-#include <iostream>
-
-std::ostream & operator<<(std::ostream & os, Posix::StreamSocket::State state)
-{
-	switch (state) {
-	case Posix::StreamSocket::State::init: return os << "init";
-	case Posix::StreamSocket::State::in_progress: return os << "in_progress";
-	case Posix::StreamSocket::State::connected: return os << "connected";
-	case Posix::StreamSocket::State::error: return os << "error";
-	}
-	return os;
-}
-
 int clingeling(int, char *[])
 {
 	auto poller_factory = EPoll::CtrlFactory::create();
