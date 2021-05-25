@@ -65,12 +65,12 @@ void CtrlImpl::on_response(std::function<void(Command::Response const&)> const& 
 void CtrlImpl::on_json(Json::Object const& obj)
 {
 	auto [is_event, ev] = Event::parse(obj);
-	if (is_event) {
+	if (is_event && on_event_) {
 		on_event_(ev);
 	}
 
 	auto [is_resp, resp] = Command::parse(obj);
-	if (is_resp) {
+	if (is_resp && on_response_) {
 		on_response_(resp);
 	}
 }
