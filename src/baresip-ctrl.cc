@@ -45,7 +45,7 @@ CtrlImpl::CtrlImpl(IO::ReadEventBuffer & recvbuf, IO::WriteBuffer & sendbuf)
 {
 	recvbuf.on_fill([this] () {
 		auto data = std::string{};
-		if (netstring_.parse(data)) {
+		while (netstring_.parse(data)) {
 			std::stringstream ss{data};
 			on_json(Json::parse_object(ss));
 		}

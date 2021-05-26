@@ -91,9 +91,14 @@ public:
 		recvbuf.on_drain([]() {});
 	}
 
+	std::string to_netstring(std::string const& str)
+	{
+		return std::to_string(str.size()) + ':' + str + ',';
+	}
+
 	void send_data(std::string const& str)
 	{
-		auto netstr = std::to_string(str.size()) + ':' + str + ',';
+		auto netstr = to_netstring(str);
 		recvbuf.reserve(netstr.size());
 		netstr.copy(static_cast<char *>(recvbuf.wstart()), netstr.size());
 		recvbuf.fill(netstr.size());
@@ -426,6 +431,66 @@ UTEST_CASE_WITH_FIXTURE(response_test, CommandTestFixture)
 		"01AAFE489"};
 
 	UTEST_ASSERT_EQUAL(expected, res);
+}
+
+UTEST_CASE_WITH_FIXTURE(multiple_events_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"REGISTER_FAIL\","
+		"\"class\":\"register\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"param\":\"401 Unauthorized\""
+		"}"
+	};
+
+	for (auto i = 0; i < 100; ++i) {
+		send_data(data);
+
+		UTEST_ASSERT(have_res);
+
+		auto expected = Baresip::Event::Any{Baresip::Event::Register{
+			Baresip::Event::Register::Type::Fail,
+			"sip:9999-1@asterisk.example.com",
+			"401 Unauthorized"}};
+
+		UTEST_ASSERT_EQUAL(expected, res);
+		UTEST_ASSERT_EQUAL(size_t(0), recvbuf.rsize());
+		UTEST_ASSERT_EQUAL(size_t(4096), recvbuf.wsize());
+
+		have_res = false;
+		res = {};
+	}
+}
+
+UTEST_CASE_WITH_FIXTURE(multiple_events_one_send_test, EventTestFixture)
+{
+	auto data = std::string{
+		"{"
+		"\"event\":true,"
+		"\"type\":\"REGISTER_FAIL\","
+		"\"class\":\"register\","
+		"\"accountaor\":\"sip:9999-1@asterisk.example.com\","
+		"\"param\":\"401 Unauthorized\""
+		"}"
+	};
+
+	auto netstr = to_netstring(data) + to_netstring(data);
+	recvbuf.reserve(netstr.size());
+	netstr.copy(static_cast<char *>(recvbuf.wstart()), netstr.size());
+	recvbuf.fill(netstr.size());
+
+	UTEST_ASSERT(have_res);
+
+	auto expected = Baresip::Event::Any{Baresip::Event::Register{
+		Baresip::Event::Register::Type::Fail,
+		"sip:9999-1@asterisk.example.com",
+		"401 Unauthorized"}};
+
+	UTEST_ASSERT_EQUAL(expected, res);
+	UTEST_ASSERT_EQUAL(size_t(0), recvbuf.rsize());
+	UTEST_ASSERT_EQUAL(size_t(4096), recvbuf.wsize());
 }
 
 /*
