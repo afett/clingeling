@@ -9,17 +9,18 @@ BufferedStreamSocket::BufferedStreamSocket(
 :
 	sendbuf_{4096},
 	recvbuf_{4096},
-	poller_(poller),
 	socket_(socket_factory.make_stream_socket({
 		Posix::SocketFactory::Params::Domain::Inet,
 		Posix::SocketFactory::Params::Type::Stream,
-		Posix::Fd::Option::nonblock|Posix::Fd::Option::cloexec}))
+		Posix::Fd::Option::nonblock|Posix::Fd::Option::cloexec})),
+	ev_{poll_events()},
+	poller_(poller)
 {
 	connect(addr);
 
 	recvbuf_.on_drain([this] () { update_poll_events(); });
 
-	poller.add(socket_, poll_events(), [this] (auto ev) {
+	poller.add(socket_, ev_, [this] (auto ev) {
 		if (!ev) {
 			return;
 		}
@@ -76,7 +77,10 @@ void BufferedStreamSocket::connect(Posix::SocketAddress const& addr)
 
 void BufferedStreamSocket::update_poll_events()
 {
-	poller_.mod(socket_, poll_events());
+	if (auto ev = poll_events(); ev != ev_) {
+		ev_ = ev;
+		poller_.mod(socket_, ev_);
+	}
 }
 
 EPoll::Events BufferedStreamSocket::poll_events() const

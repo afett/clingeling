@@ -37,6 +37,7 @@ private:
 
 	IO::EventBuffer sendbuf_;
 	IO::EventBuffer recvbuf_;
-	EPoll::Ctrl & poller_;
 	std::shared_ptr<Posix::StreamSocket> socket_;
+	EPoll::Events ev_;
+	EPoll::Ctrl & poller_;
 };
