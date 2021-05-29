@@ -6,9 +6,15 @@
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <cstring>
 
 #include "posix/socket-address.h"
 #include "posix/inet-address.h"
+
+bool operator<(sockaddr_storage const& l, sockaddr_storage const& r)
+{
+	return ::memcmp(&l, &r, sizeof(l)) < 0;
+}
 
 namespace {
 
@@ -43,9 +49,71 @@ SocketAddress::SocketAddress(Inet::Address const& addr, uint16_t port)
 	case Inet::Address::Family::Inet6:
 		size_ = ::init_sockaddr_inet6(reinterpret_cast<sockaddr_in6*>(data_.get()), ::htons(port), addr.in6_addr_data());
 		break;
+	case Inet::Address::Family::None:
+		throw std::runtime_error("Can't create SocketAddress from unspecified address");
+		break;
 	}
 }
 
 SocketAddress::~SocketAddress() = default;
+SocketAddress::SocketAddress() = default;
+
+SocketAddress::SocketAddress(SocketAddress const& o)
+:
+	size_(o.size_),
+	data_(std::make_unique<sockaddr_storage>(*o.data_))
+{ }
+
+SocketAddress::SocketAddress(SocketAddress && o)
+:
+	size_(std::exchange(o.size_, 0)),
+	data_(std::move(o.data_))
+{ }
+
+SocketAddress & SocketAddress::operator=(SocketAddress const& o)
+{
+	if (&o != this) {
+		size_ = o.size_;
+		data_ = std::make_unique<sockaddr_storage>(*o.data_);
+	}
+	return *this;
+}
+
+SocketAddress & SocketAddress::operator=(SocketAddress && o)
+{
+	if (&o != this) {
+		size_ = std::exchange(o.size_, 0);
+		data_ = std::move(o.data_);
+	}
+	return *this;
+}
+
+bool operator<(SocketAddress const& l, SocketAddress const& r)
+{
+	return !(l.size_ == 0 && r.size_ == 0) && std::tie(l.size_, *l.data_) < std::tie(r.size_, *r.data_);
+}
+
+std::string to_string(SocketAddress const& addr)
+{
+	if (addr.size_ == 0) {
+		return {};
+	}
+
+	auto addrstr = std::string{};
+	auto port = uint16_t{0};
+	switch (addr.data_->ss_family) {
+	case AF_INET:
+		addrstr = to_string(Inet::Address{&addr.getSockaddrIn()->sin_addr});
+		port = ::ntohs(addr.getSockaddrIn()->sin_port);
+		break;
+	case AF_INET6:
+		addrstr = "[" + to_string(Inet::Address{&addr.getSockaddrIn6()->sin6_addr}) + "]";
+		port = ::ntohs(addr.getSockaddrIn6()->sin6_port);
+		break;
+	default:
+		break;
+	}
+	return addrstr + ':' + std::to_string(port);
+}
 
 }

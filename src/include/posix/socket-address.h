@@ -28,6 +28,8 @@
 #include <memory>
 
 struct sockaddr;
+struct sockaddr_in;
+struct sockaddr_in6;
 struct sockaddr_storage;
 
 namespace Posix {
@@ -38,7 +40,13 @@ class Address;
 
 class SocketAddress {
 public:
+	SocketAddress();
 	SocketAddress(Inet::Address const&, uint16_t);
+	SocketAddress(SocketAddress const&);
+	SocketAddress(SocketAddress &&);
+	SocketAddress & operator=(SocketAddress const&);
+	SocketAddress & operator=(SocketAddress &&);
+	~SocketAddress();
 
 	sockaddr const* getSockaddr() const
 	{
@@ -50,11 +58,64 @@ public:
 		return size_;
 	}
 
-	~SocketAddress();
+	explicit operator bool() const
+	{
+		return size_ != 0;
+	}
+
+	friend bool operator<(SocketAddress const&, SocketAddress const&);
+	friend std::string to_string(SocketAddress const&);
 
 private:
+	sockaddr_in * getSockaddrIn()
+	{
+		return reinterpret_cast<sockaddr_in *>(data_.get());
+	}
+
+	sockaddr_in6 * getSockaddrIn6()
+	{
+		return reinterpret_cast<sockaddr_in6 *>(data_.get());
+	}
+
+	sockaddr_in * getSockaddrIn() const
+	{
+		return reinterpret_cast<sockaddr_in *>(data_.get());
+	}
+
+	sockaddr_in6 * getSockaddrIn6() const
+	{
+		return reinterpret_cast<sockaddr_in6 *>(data_.get());
+	}
+
 	size_t size_ = 0;
 	std::unique_ptr<sockaddr_storage> data_;
 };
+
+inline bool operator>(SocketAddress const& l, SocketAddress const& r)
+{
+	return r < l;
+}
+
+inline bool operator==(SocketAddress const& l, SocketAddress const& r)
+{
+	return !(l < r) && !(l > r);
+}
+
+inline bool operator!=(SocketAddress const& l, SocketAddress const& r)
+{
+	return !(l == r);
+}
+
+inline bool operator<=(SocketAddress const& l, SocketAddress const& r)
+{
+	return (l < r) || (l == r);
+}
+
+inline bool operator>=(SocketAddress const& l, SocketAddress const& r)
+{
+	return (l > r) || (l == r);
+}
+
+std::string to_string(SocketAddress const&);
 
 }
