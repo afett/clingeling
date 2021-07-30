@@ -100,7 +100,7 @@ CtrlImpl::CtrlImpl()
 	fd_(Posix::Fd::create(::epoll_create1(EPOLL_CLOEXEC)))
 {
 	if (fd_->get() == -1) {
-		throw Posix::make_system_error(errno, "::epoll_create1(EPOLL_CLOEXEC)");
+		throw POSIX_SYSTEM_ERROR("%s", "::epoll_create1(EPOLL_CLOEXEC)");
 	}
 }
 
@@ -125,7 +125,7 @@ void CtrlImpl::del(std::shared_ptr<Posix::Fd> const& fd)
 		throw std::runtime_error("cound not find fd to delete");
 	}
 	if (::epoll_ctl(fd_->get(), EPOLL_CTL_DEL, fd->get(), nullptr) == -1) {
-		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_DEL, %s, nullptr)", fd_->get(), fd->get());
+		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_DEL, %s, nullptr)", fd_->get(), fd->get());
 	}
 }
 
@@ -140,7 +140,7 @@ void CtrlImpl::mod(std::shared_ptr<Posix::Fd> const& fd, Events const& ev) const
 	epoll_ev.events = ::epoll_events(ev);
 	epoll_ev.data.ptr = it->second.get();
 	if (::epoll_ctl(fd_->get(), EPOLL_CTL_MOD, fd->get(), &epoll_ev) == -1) {
-		throw Posix::make_system_error(errno, "::epoll_ctl(%s, EPOLL_CTL_MOD, %s, &epoll_ev)", fd_->get(), fd->get());
+		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_MOD, %s, &epoll_ev)", fd_->get(), fd->get());
 	}
 }
 
@@ -158,7 +158,7 @@ bool CtrlImpl::wait(std::chrono::milliseconds const& timeout = Infinity()) const
 	} while (nevents == -1 && errno == EINTR);
 
 	if (nevents == -1) {
-		throw Posix::make_system_error(errno, "::epoll_wait(%s, events.data(), %s, %s)", fd_.get(), events.size(), to);
+		throw POSIX_SYSTEM_ERROR("::epoll_wait(%s, events.data(), %s, %s)", fd_.get(), events.size(), to);
 	}
 
 	assert(nevents >= 0);
