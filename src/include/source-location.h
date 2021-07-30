@@ -25,3 +25,8 @@ inline std::string to_string(SourceLocation const& sl)
 {
 	return std::string{sl.file} + ":" + std::to_string(sl.line) + ": " + sl.function;
 }
+
+inline void throw_backtrace(SourceLocation sl = SourceLocation::current())
+{
+	std::throw_with_nested(std::runtime_error(to_string(sl)));
+}
