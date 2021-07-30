@@ -1,5 +1,5 @@
 #include "utest/macros.h"
-#include "signal.h"
+#include "signals.h"
 
 #include <map>
 
