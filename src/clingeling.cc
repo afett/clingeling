@@ -10,6 +10,7 @@
 #include "posix/pipe-factory.h"
 #include "buffered-stream-socket.h"
 #include "baresip/ctrl.h"
+#include "source-location.h"
 
 int clingeling(int, char *[])
 {
@@ -41,9 +42,13 @@ int clingeling(int, char *[])
 		throw std::runtime_error("bad read from pipe");
 	});
 
-	do {
-		poller->wait();
-	} while (run);
+	try {
+		do {
+			poller->wait();
+		} while (run);
+	} catch (...) {
+		throw_backtrace();
+	}
 
 	return 0;
 }
