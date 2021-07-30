@@ -28,6 +28,7 @@
 #include <system_error>
 
 #include "fmt.h"
+#include "source-location.h"
 
 namespace Posix {
 
@@ -43,11 +44,11 @@ std::system_error make_system_error(int ev, std::string const& fmt, Args ...args
 }
 
 template <typename... Args>
-std::system_error make_system_error_detail(int ev, const char* file, size_t line, std::string const& fmt, Args ...args)
+std::system_error make_system_error_detail(int ev, SourceLocation const& sl, std::string const& fmt, Args ...args)
 {
-	return make_system_error(ev, Fmt::format(std::string("%s:%s: ") + fmt, file, line, args...));
+	return make_system_error(ev, Fmt::format(std::string("%s: ") + fmt, to_string(sl), args...));
 }
 
 }
 
-#define POSIX_SYSTEM_ERROR(fmt, ...) Posix::make_system_error_detail(errno, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+#define POSIX_SYSTEM_ERROR(fmt, ...) Posix::make_system_error_detail(errno, SourceLocation::current(), (fmt), __VA_ARGS__)
