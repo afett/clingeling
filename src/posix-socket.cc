@@ -131,7 +131,7 @@ public:
 				return;
 			} else {
 				state_ = State::error;
-				throw;
+				throw_backtrace();
 			}
 		}
 		state_ = State::connected;
