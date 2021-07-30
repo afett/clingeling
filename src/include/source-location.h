@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class SourceLocation {
 public:
 	using Line = decltype(__builtin_LINE());
@@ -18,3 +20,8 @@ public:
 	File file = "unknown";
 	Function function = "unknown";
 };
+
+inline std::string to_string(SourceLocation const& sl)
+{
+	return std::string{sl.file} + ":" + std::to_string(sl.line) + ": " + sl.function;
+}
