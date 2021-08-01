@@ -44,12 +44,43 @@ public:
 		Closed,
 	};
 
+	class Id {
+	public:
+		Id() = default;
+		Id(Id const&) = default;
+		Id(Id &&) = default;
+		Id & operator=(Id const&) = default;
+		Id & operator=(Id &&) = default;
+
+		explicit Id(std::string const& value)
+		:
+			value_(value)
+		{ }
+
+		explicit operator bool() const
+		{
+			return !value_.empty();
+		}
+	private:
+		friend bool operator<(Id const& l, Id const& r)
+		{
+			return l.value_ < r.value_;
+		}
+
+		friend std::string to_string(Id const& id)
+		{
+			return id.value_;
+		}
+
+		std::string value_;
+	};
+
 	inline SignalProxy<void(State)> & on_state_change()
 	{
 		return on_state_change_;
 	}
 
-	virtual std::string id() const = 0;
+	virtual Id id() const = 0;
 	virtual State state() const = 0;
 	virtual Direction direction() const = 0;
 	virtual std::string accountaor() const = 0;
@@ -85,6 +116,21 @@ public:
 protected:
 	Signal<void(std::shared_ptr<Call> const&)> on_call_;
 };
+
+inline bool operator>(Call::Id const& l, Call::Id const& r)
+{
+	return r < l;
+}
+
+inline bool operator==(Call::Id const& l, Call::Id const& r)
+{
+	return !(l < r) && !(l > r);
+}
+
+inline bool operator!=(Call::Id const& l, Call::Id const& r)
+{
+	return !(l == r);
+}
 
 }
 

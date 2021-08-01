@@ -30,6 +30,15 @@ public:
 	}
 };
 
+template <>
+class StringTrait<Baresip::Call::Id> {
+public:
+	static std::string to_string(Baresip::Call::Id const& id)
+	{
+		return to_string(id);
+	}
+};
+
 }
 
 namespace unittests {
@@ -69,7 +78,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 		"sip:7777@192.168.55.1:5060"}});
 
 	UTEST_ASSERT(call);
-	UTEST_ASSERT_EQUAL("5726089069c0f5d0476be4b315354199@192.168.55.2:5060", call->id());
+	UTEST_ASSERT_EQUAL(Baresip::Call::Id{"5726089069c0f5d0476be4b315354199@192.168.55.2:5060"}, call->id());
 	UTEST_ASSERT_EQUAL(Baresip::Call::State::Incoming, call->state());
 	UTEST_ASSERT_EQUAL(Baresip::Call::Direction::Incoming, call->direction());
 	UTEST_ASSERT_EQUAL("sip:9999-1@asterisk.example.com", call->accountaor());
@@ -125,7 +134,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 		"sip:7777@asterisk.example.com;transport=udp"}});
 
 	UTEST_ASSERT(call);
-	UTEST_ASSERT_EQUAL("6d42101ce49915a3", call->id());
+	UTEST_ASSERT_EQUAL(Baresip::Call::Id{"6d42101ce49915a3"}, call->id());
 	UTEST_ASSERT_EQUAL(Baresip::Call::State::Ringing, call->state());
 	UTEST_ASSERT_EQUAL(Baresip::Call::Direction::Outgoing, call->direction());
 	UTEST_ASSERT_EQUAL("sip:9999-1@asterisk.example.com", call->accountaor());
@@ -202,6 +211,27 @@ UTEST_CASE_WITH_FIXTURE(registration_unregistering_test, Fixture)
 		"sip:9999-1@asterisk.example.com",
 		""}});
 	UTEST_ASSERT_EQUAL(Baresip::Model::Registration::Unknown, model->registration());
+}
+
+UTEST_CASE(call_id_test)
+{
+	UTEST_ASSERT(!Baresip::Call::Id{});
+	UTEST_ASSERT(!Baresip::Call::Id{""});
+	UTEST_ASSERT(Baresip::Call::Id{"abc"});
+
+	UTEST_ASSERT(Baresip::Call::Id{} < Baresip::Call::Id{"a"});
+	UTEST_ASSERT(Baresip::Call::Id{"a"} < Baresip::Call::Id{"b"});
+	UTEST_ASSERT(Baresip::Call::Id{"abc"} < Baresip::Call::Id{"b"});
+
+	UTEST_ASSERT(Baresip::Call::Id{"a"} > Baresip::Call::Id{});
+	UTEST_ASSERT(Baresip::Call::Id{"b"} > Baresip::Call::Id{"a"});
+	UTEST_ASSERT(Baresip::Call::Id{"b"} > Baresip::Call::Id{"abc"});
+
+	UTEST_ASSERT(Baresip::Call::Id{} == Baresip::Call::Id{});
+	UTEST_ASSERT(Baresip::Call::Id{"a"} == Baresip::Call::Id{"a"});
+
+	UTEST_ASSERT(Baresip::Call::Id{} != Baresip::Call::Id{"a"});
+	UTEST_ASSERT(Baresip::Call::Id{"b"} != Baresip::Call::Id{"a"});
 }
 
 }}

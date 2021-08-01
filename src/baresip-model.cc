@@ -46,7 +46,7 @@ public:
 
 	bool on_event(Event::Call const& ev)
 	{
-		if (ev.id != id_) {
+		if (Id{ev.id} != id_) {
 			return false;
 		}
 
@@ -58,14 +58,14 @@ public:
 		return true;
 	}
 
-	std::string id() const final;
+	Id id() const final;
 	State state() const final;
 	Direction direction() const final;
 	std::string accountaor() const final;
 	std::string peeruri() const final;
 
 private:
-	std::string id_;
+	Id id_;
 	State state_;
 	Direction direction_;
 	std::string accountaor_;
@@ -120,7 +120,7 @@ std::unique_ptr<Model> Model::create()
 	return std::make_unique<ModelImpl>();
 }
 
-std::string CallImpl::id() const
+Call::Id CallImpl::id() const
 {
 	return id_;
 }
