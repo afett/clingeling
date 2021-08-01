@@ -10,6 +10,7 @@
 #include "posix/pipe-factory.h"
 #include "buffered-stream-socket.h"
 #include "baresip/ctrl.h"
+#include "baresip/model.h"
 #include "source-location.h"
 
 int clingeling(int, char *[])
@@ -23,6 +24,9 @@ int clingeling(int, char *[])
 		*poller, *socket_factory, Posix::SocketAddress{Posix::Inet::Address{"127.0.0.1"}, 4444});
 
 	auto baresip_ctrl = Baresip::Ctrl::create(socket_buffer.recvbuf(), socket_buffer.sendbuf());
+
+	auto baresip_model = Baresip::Model::create();
+	baresip_ctrl->on_event([&baresip_model](auto const& ev) { baresip_model->on_event(ev); });
 
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
