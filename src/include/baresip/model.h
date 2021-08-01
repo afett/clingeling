@@ -49,6 +49,7 @@ public:
 		return on_state_change_;
 	}
 
+	virtual std::string id() const = 0;
 	virtual State state() const = 0;
 	virtual Direction direction() const = 0;
 	virtual std::string accountaor() const = 0;

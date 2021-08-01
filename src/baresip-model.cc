@@ -58,6 +58,7 @@ public:
 		return true;
 	}
 
+	std::string id() const final;
 	State state() const final;
 	Direction direction() const final;
 	std::string accountaor() const final;
@@ -117,6 +118,11 @@ private:
 std::unique_ptr<Model> Model::create()
 {
 	return std::make_unique<ModelImpl>();
+}
+
+std::string CallImpl::id() const
+{
+	return id_;
 }
 
 Call::State CallImpl::state() const
