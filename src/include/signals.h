@@ -104,7 +104,7 @@ private:
 // RAII wrapper for connection
 class AutoConnection {
 public:
-	AutoConnection() = delete;
+	AutoConnection() = default;
 	AutoConnection(AutoConnection const&) = delete;
 	AutoConnection & operator=(AutoConnection const&) = delete;
 
