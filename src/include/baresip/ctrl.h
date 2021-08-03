@@ -26,6 +26,7 @@
 #pragma once
 
 #include "baresip/event.h"
+#include "signals.h"
 
 #include <functional>
 #include <memory>
@@ -43,9 +44,22 @@ class Response;
 class Ctrl {
 public:
 	static std::unique_ptr<Ctrl> create(IO::ReadEventBuffer &, IO::WriteBuffer &);
-	virtual void on_event(std::function<void(Event::Any const&)> const&) = 0;
-	virtual void on_response(std::function<void(Command::Response const&)> const&) = 0;
+
+	inline SignalProxy<void(Event::Any const&)> & on_event()
+	{
+		return on_event_;
+	}
+
+	inline SignalProxy<void(Command::Response const&)> & on_response()
+	{
+		return on_response_;
+	}
+
 	virtual ~Ctrl() = default;
+
+protected:
+	Signal<void(Event::Any const&)> on_event_;
+	Signal<void(Command::Response const&)> on_response_;
 };
 
 }

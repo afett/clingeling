@@ -114,7 +114,7 @@ class EventTestFixture : public CtrlTestFixture {
 public:
 	EventTestFixture()
 	{
-		ctrl->on_event([this] (auto const& ev) { have_res = true; res = ev; });
+		ctrl->on_event().connect([this] (auto const& ev) { have_res = true; res = ev; });
 	}
 
 	Baresip::Event::Any res;
@@ -124,7 +124,7 @@ class CommandTestFixture : public CtrlTestFixture {
 public:
 	CommandTestFixture()
 	{
-		ctrl->on_response([this] (auto const& resp) { have_res = true; res = resp; });
+		ctrl->on_response().connect([this] (auto const& resp) { have_res = true; res = resp; });
 	}
 
 	Baresip::Command::Response res;
