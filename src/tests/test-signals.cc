@@ -966,4 +966,104 @@ UTEST_CASE(test_custom_callback)
 	UTEST_ASSERT(!conn.connected());
 }
 
+UTEST_CASE(test_empty_slot)
+{
+	Slot<void(int)> slot1;
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+	sig1(42);
+}
+
+UTEST_CASE(test_ctor_slot)
+{
+	int res{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+	sig1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+}
+
+UTEST_CASE(test_reset_empty_slot)
+{
+	Slot<void(int)> slot1;
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+
+	int res{0};
+	slot1.reset([&res](auto arg){ res = arg; });
+
+	sig1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+}
+
+UTEST_CASE(test_reset_slot)
+{
+	Slot<void(int)> slot1;
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+
+	int res{0};
+	slot1.reset([&res](auto arg){ res = arg; });
+
+	sig1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+
+	int res1{0};
+	slot1.reset([&res1](auto arg){ res1 = arg; });
+	sig1(43);
+	UTEST_ASSERT_EQUAL(43, res1);
+	UTEST_ASSERT_EQUAL(42, res);
+}
+
+UTEST_CASE(test_slot_multiple_signals)
+{
+	int res{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+
+	Signal<void(int)> sig2;
+	connect(slot1, sig2);
+
+	sig1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+	sig2(43);
+	UTEST_ASSERT_EQUAL(43, res);
+}
+
+UTEST_CASE(test_slot_disconnect_all)
+{
+	int res{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+
+	Signal<void(int)> sig1;
+	connect(slot1, sig1);
+
+	Signal<void(int)> sig2;
+	connect(slot1, sig2);
+
+	slot1.disconnect();
+
+	sig1(42);
+	UTEST_ASSERT_EQUAL(0, res);
+	sig2(43);
+	UTEST_ASSERT_EQUAL(0, res);
+}
+
+UTEST_CASE(test_slot_auto_disconnect)
+{
+	Signal<void(int)> sig1;
+
+	int res{0};
+	{
+		Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+		connect(slot1, sig1);
+	}
+
+	sig1(42);
+	UTEST_ASSERT_EQUAL(0, res);
+}
+
 }}
