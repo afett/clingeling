@@ -77,9 +77,10 @@ public:
 	ModelImpl()
 	:
 		event_handler_(*this)
-	{ }
+	{
+		on_event_.reset([this] (auto const& ev) { std::visit(event_handler_, ev); });
+	}
 
-	void on_event(Event::Any const&) final;
 	Registration registration() const final;
 	std::vector<std::shared_ptr<Call>> calls() const final;
 
@@ -143,11 +144,6 @@ std::string CallImpl::accountaor() const
 std::string CallImpl::peeruri() const
 {
 	return peeruri_;
-}
-
-void ModelImpl::on_event(Event::Any const& ev)
-{
-	std::visit(event_handler_, ev);
 }
 
 void ModelImpl::on_call_event(Event::Call const& ev)

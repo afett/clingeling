@@ -107,13 +107,18 @@ public:
 		return on_call_;
 	}
 
-	virtual void on_event(Event::Any const&) = 0;
+	inline SlotProxy<void(Event::Any const&)> & on_event()
+	{
+		return on_event_;
+	}
+
 	virtual Registration registration() const = 0;
 	virtual std::vector<std::shared_ptr<Call>> calls() const = 0;
 
 	virtual ~Model() = default;
 
 protected:
+	Slot<void(Event::Any const&)> on_event_;
 	Signal<void(std::shared_ptr<Call> const&)> on_call_;
 };
 

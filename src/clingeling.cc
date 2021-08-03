@@ -26,7 +26,10 @@ int clingeling(int, char *[])
 	auto baresip_ctrl = Baresip::Ctrl::create(socket_buffer.recvbuf(), socket_buffer.sendbuf());
 
 	auto baresip_model = Baresip::Model::create();
-	baresip_ctrl->on_event([&baresip_model](auto const& ev) { baresip_model->on_event(ev); });
+
+	Signal<void(Baresip::Event::Any const&)> event_signal;
+	baresip_ctrl->on_event([&event_signal](auto const& ev) { event_signal(ev); });
+	connect(baresip_model->on_event(), event_signal);
 
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
