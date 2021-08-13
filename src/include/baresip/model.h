@@ -75,10 +75,7 @@ public:
 		std::string value_;
 	};
 
-	inline SignalProxy<void(State)> & on_state_change()
-	{
-		return on_state_change_;
-	}
+	SignalProxy<void(State)> & on_state_change{on_state_change_};
 
 	virtual Id id() const = 0;
 	virtual State state() const = 0;
@@ -102,15 +99,9 @@ public:
 		Fail,
 	};
 
-	inline SignalProxy<void(std::shared_ptr<Call> const&)> & on_call()
-	{
-		return on_call_;
-	}
+	SignalProxy<void(std::shared_ptr<Call> const&)> & on_call{on_call_};
 
-	inline SlotProxy<void(Event::Any const&)> & on_event()
-	{
-		return on_event_;
-	}
+	SlotProxy<void(Event::Any const&)> & on_event{on_event_};
 
 	virtual Registration registration() const = 0;
 	virtual std::vector<std::shared_ptr<Call>> calls() const = 0;
@@ -138,4 +129,3 @@ inline bool operator!=(Call::Id const& l, Call::Id const& r)
 }
 
 }
-

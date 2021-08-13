@@ -50,7 +50,7 @@ public:
 	:
 		model(Baresip::Model::create())
 	{
-		connect(model->on_event(), on_event);
+		connect(model->on_event, on_event);
 	}
 
 	Signal<void(Baresip::Event::Any const&)> on_event;
@@ -69,7 +69,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 	UTEST_ASSERT(model->calls().empty());
 
 	std::shared_ptr<Baresip::Call> call;
-	model->on_call().connect([&call](auto const& c) { call = c; });
+	model->on_call.connect([&call](auto const& c) { call = c; });
 
 	// incomming call
 	on_event(Baresip::Event::Any{Baresip::Event::Call{
@@ -92,7 +92,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 	UTEST_ASSERT_EQUAL(call, calls[0]);
 
 	Baresip::Call::State call_state = Baresip::Call::State::Closed;
-	call->on_state_change().connect([&call_state](auto state){ call_state = state; });
+	call->on_state_change.connect([&call_state](auto state){ call_state = state; });
 
 	// incomming call accepted
 	on_event(Baresip::Event::Any{Baresip::Event::Call{
@@ -125,7 +125,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 	UTEST_ASSERT(model->calls().empty());
 
 	std::shared_ptr<Baresip::Call> call;
-	model->on_call().connect([&call](auto const& c) { call = c; });
+	model->on_call.connect([&call](auto const& c) { call = c; });
 
 	// outgoing
 	on_event(Baresip::Event::Any{Baresip::Event::Call{
@@ -148,7 +148,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 	UTEST_ASSERT_EQUAL(call, calls[0]);
 
 	Baresip::Call::State call_state = Baresip::Call::State::Closed;
-	call->on_state_change().connect([&call_state](auto state){ call_state = state; });
+	call->on_state_change.connect([&call_state](auto state){ call_state = state; });
 
 	// outgoing call accepted
 	on_event(Baresip::Event::Any{Baresip::Event::Call{

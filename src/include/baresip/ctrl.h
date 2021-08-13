@@ -45,15 +45,8 @@ class Ctrl {
 public:
 	static std::unique_ptr<Ctrl> create(IO::ReadEventBuffer &, IO::WriteBuffer &);
 
-	inline SignalProxy<void(Event::Any const&)> & on_event()
-	{
-		return on_event_;
-	}
-
-	inline SignalProxy<void(Command::Response const&)> & on_response()
-	{
-		return on_response_;
-	}
+	SignalProxy<void(Event::Any const&)> & on_event{on_event_};
+	SignalProxy<void(Command::Response const&)> & on_response{on_response_};
 
 	virtual ~Ctrl() = default;
 
