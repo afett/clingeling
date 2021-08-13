@@ -147,6 +147,12 @@ private:
 template <typename T>
 class SignalProxy {
 public:
+	SignalProxy() = default;
+	SignalProxy(SignalProxy const&) = delete;
+	SignalProxy(SignalProxy &&) = delete;
+	SignalProxy & operator=(SignalProxy const&) = delete;
+	SignalProxy & operator=(SignalProxy &&) = delete;
+
 	virtual Connection connect(std::function<T> const&) = 0;
 	virtual ~SignalProxy() = default;
 };
