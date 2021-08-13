@@ -259,6 +259,12 @@ private:
 template <typename T>
 class SlotProxy {
 public:
+	SlotProxy() = default;
+	SlotProxy(SlotProxy const&) = delete;
+	SlotProxy(SlotProxy &&) = delete;
+	SlotProxy & operator=(SlotProxy const&) = delete;
+	SlotProxy & operator=(SlotProxy &&) = delete;
+
 	virtual Connection connect(SignalProxy<T> &) = 0;
 	virtual ~SlotProxy() = default;
 };
