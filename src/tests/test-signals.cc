@@ -525,7 +525,7 @@ UTEST_CASE(test_connection_assign)
 	UTEST_ASSERT(res2.called);
 }
 
-class producer {
+class Producer {
 public:
 	SignalProxy<void(void)> & signal_my_event()
 	{
@@ -542,74 +542,30 @@ private:
 	Signal<void(void)> on_event_;
 };
 
-// The purpose of this class is to keep the actual functions handling signals
-// private but expose an interface to connect objects of two classes in
-// a typesafe manner. The signature of the signal thus becomes the only
-// compile time dependency between those two. This particular slot type
-// allows to connect a slot to multiple signals as long as they share the
-// same signature. The drawback is an additional copy of the callback.
-template <typename T>
-class slot {
+class Consumer {
 public:
-	slot(std::function<T> const& cb)
-	:
-		cb_(cb)
-	{ }
-
-	void disconnect()
-	{
-		std::for_each(conn_.begin(), conn_.end(),
-			[](Connection & conn){ conn.disconnect(); });
-		conn_.clear();
-	}
-
-	~slot()
-	{
-		cb_ = 0;
-		disconnect();
-	}
-
-private:
-	// behold the lovely syntax for defining a free standing function ...
-	friend void connect(slot<T> & sl, SignalProxy<T> & sig)
-	{
-		UTEST_ASSERT(sl.cb_);
-		sl.conn_.push_back(sig.connect(sl.cb_));
-	}
-
-	std::function<T> cb_;
-	std::vector<Connection> conn_;
-};
-
-class consumer {
-public:
-	slot<void(void)> & slot_my_event()
+	SlotProxy<void(void)> & slot_my_event()
 	{
 		return on_event_;
 	}
 
-	consumer()
+	Consumer()
 	:
 		count(0),
 		// beware of virtual functions here
-		on_event_(std::bind(&consumer::on_event, this))
+		on_event_([this]() { ++count; })
 	{ }
 
 	size_t count;
 
 private:
-	void on_event()
-	{
-		++count;
-	}
-
-	slot<void(void)> on_event_;
+	Slot<void(void)> on_event_;
 };
 
 UTEST_CASE(test_loose_coupling)
 {
-	producer p;
-	consumer c;
+	Producer p;
+	Consumer c;
 
 	connect(c.slot_my_event(), p.signal_my_event());
 
