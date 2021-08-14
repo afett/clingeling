@@ -206,20 +206,16 @@ UTEST_CASE(test_connection)
 	UTEST_ASSERT(!conn2.connected());
 }
 
-void disconnect(bool & called, Connection & conn)
-{
-	called = true;
-	conn.disconnect();
-	UTEST_ASSERT(!conn.connected());
-}
-
 UTEST_CASE(test_connection_disconnect_self)
 {
 	bool called(false);
 	Signal<void(void)> sig;
 	Connection conn;
-	auto conn1(sig.connect(std::bind(
-		&disconnect, std::ref(called), std::ref(conn))));
+	auto conn1(sig.connect([&called, &conn]() {
+			called = true;
+			conn.disconnect();
+			UTEST_ASSERT(!conn.connected());
+		}));
 	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 
 	conn = conn1;
@@ -242,8 +238,11 @@ UTEST_CASE(test_connection_disconnect_next)
 	bool called(false);
 	Signal<void(void)> sig;
 	Connection conn;
-	auto conn1(sig.connect(std::bind(
-		&disconnect, std::ref(called), std::ref(conn))));
+	auto conn1(sig.connect([&called, &conn]() {
+			called = true;
+			conn.disconnect();
+			UTEST_ASSERT(!conn.connected());
+		}));
 
 	CallResult res;
 	auto conn2(sig.connect(res.fn()));
@@ -277,8 +276,11 @@ UTEST_CASE(test_connection_disconnect_prev)
 
 	CallResult res;
 	auto conn1(sig.connect(res.fn()));
-	auto conn2(sig.connect(std::bind(
-		&disconnect, std::ref(called), std::ref(conn))));
+	auto conn2(sig.connect([&called, &conn]() {
+			called = true;
+			conn.disconnect();
+			UTEST_ASSERT(!conn.connected());
+		}));
 	UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 	conn = conn1;
