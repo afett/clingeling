@@ -1102,4 +1102,30 @@ UTEST_CASE(test_slot_move_assign)
 	UTEST_ASSERT_EQUAL(0, res2);
 }
 
+UTEST_CASE(test_signal1)
+{
+	Signal1<void(int)> sig1;
+	int res{0};
+	auto conn{sig1.connect([&res](auto arg) { res = arg; })};
+	sig1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+	UTEST_ASSERT(conn.connected());
+
+	int res2{0};
+	auto conn2{sig1.connect([&res2](auto arg) { res2 = arg; })};
+	UTEST_ASSERT(!conn.connected());
+	UTEST_ASSERT(conn2.connected());
+
+	sig1(43);
+	UTEST_ASSERT_EQUAL(42, res);
+	UTEST_ASSERT_EQUAL(43, res2);
+
+	conn2.disconnect();
+	UTEST_ASSERT(!conn2.connected());
+
+	sig1(44);
+	UTEST_ASSERT_EQUAL(42, res);
+	UTEST_ASSERT_EQUAL(43, res2);
+}
+
 }}
