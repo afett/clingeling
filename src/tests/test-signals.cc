@@ -6,31 +6,6 @@
 namespace unittests {
 namespace signal {
 
-class A {
-public:
-	A()
-	:
-		foo_called_(false),
-		foo_arg_(),
-		bar_called_(false)
-	{ }
-
-	void foo(std::string const& arg)
-	{
-		foo_called_ = true;
-		foo_arg_ = arg;
-	}
-
-	void bar() const
-	{
-		bar_called_ = true;
-	}
-
-	bool foo_called_;
-	std::string foo_arg_;
-	mutable bool bar_called_;
-};
-
 struct CallResult {
 	bool called{false};
 
@@ -74,7 +49,36 @@ UTEST_CASE(test_arg2)
 	UTEST_ASSERT_EQUAL(2, arg1);
 }
 
-UTEST_CASE(test_memfun)
+namespace {
+
+class A {
+public:
+	A()
+	:
+		foo_called_(false),
+		foo_arg_(),
+		bar_called_(false)
+	{ }
+
+	void foo(std::string const& arg)
+	{
+		foo_called_ = true;
+		foo_arg_ = arg;
+	}
+
+	void bar() const
+	{
+		bar_called_ = true;
+	}
+
+	bool foo_called_;
+	std::string foo_arg_;
+	mutable bool bar_called_;
+};
+
+}
+
+UTEST_CASE(test_bind)
 {
 	A a;
 	Signal<void(std::string)> sig;
@@ -85,11 +89,11 @@ UTEST_CASE(test_memfun)
 	UTEST_ASSERT_EQUAL("hello", a.foo_arg_);
 }
 
-UTEST_CASE(test_const_memfun)
+UTEST_CASE(test_const_bind)
 {
 	A a;
 	Signal<void(void)> sig;
-	sig.connect(std::bind(&A::bar, std::ref(a)));
+	sig.connect(std::bind(&A::bar, std::cref(a)));
 	sig();
 	UTEST_ASSERT(a.bar_called_);
 }
