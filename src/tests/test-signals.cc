@@ -6,128 +6,6 @@
 namespace unittests {
 namespace signal {
 
-struct nil {};
-
-template <typename A0 = nil,
-	  typename A1 = nil,
-	  typename A2 = nil,
-	  typename A3 = nil,
-	  typename A4 = nil,
-	  typename A5 = nil,
-	  typename A6 = nil,
-	  typename A7 = nil>
-struct call_result {
-	call_result()
-	: called(false), a0(), a1(), a2(), a3(), a4(), a5(), a6(), a7()
-	{ }
-
-	bool called;
-	A0 a0;
-	A1 a1;
-	A2 a2;
-	A3 a3;
-	A4 a4;
-	A5 a5;
-	A6 a6;
-	A7 a7;
-};
-
-void f0(call_result<> & res)
-{
-	res.called = true;
-}
-
-template <typename A0>
-void f(call_result<A0> & res, A0 a0)
-{
-	res.called = true;
-	res.a0 = a0;
-}
-
-template <typename A0, typename A1>
-void f(call_result<A0, A1> & res, A0 a0, A1 a1)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-}
-
-template <typename A0, typename A1, typename A2>
-void f(call_result<A0, A1, A2> & res, A0 a0, A1 a1, A2 a2)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-}
-
-template <typename A0, typename A1, typename A2, typename A3>
-void f(call_result<A0, A1, A2, A3> & res, A0 a0, A1 a1, A2 a2, A3 a3)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-	res.a3 = a3;
-}
-
-template <typename A0, typename A1, typename A2, typename A3,
-          typename A4>
-void f(call_result<A0, A1, A2, A3, A4> & res, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-	res.a3 = a3;
-	res.a4 = a4;
-}
-
-template <typename A0, typename A1, typename A2, typename A3,
-          typename A4, typename A5>
-void f(call_result<A0, A1, A2, A3, A4, A5> & res,
-       A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-	res.a3 = a3;
-	res.a4 = a4;
-	res.a5 = a5;
-}
-
-template <typename A0, typename A1, typename A2, typename A3,
-          typename A4, typename A5, typename A6>
-void f(call_result<A0, A1, A2, A3, A4, A5, A6> & res,
-       A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-	res.a3 = a3;
-	res.a4 = a4;
-	res.a5 = a5;
-	res.a6 = a6;
-}
-
-template <typename A0, typename A1, typename A2, typename A3,
-          typename A4, typename A5, typename A6, typename A7>
-void f(call_result<A0, A1, A2, A3, A4, A5, A6, A7> & res,
-       A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7)
-{
-	res.called = true;
-	res.a0 = a0;
-	res.a1 = a1;
-	res.a2 = a2;
-	res.a3 = a3;
-	res.a4 = a4;
-	res.a5 = a5;
-	res.a6 = a6;
-	res.a7 = a7;
-}
-
 class A {
 public:
 	A()
@@ -153,40 +31,47 @@ public:
 	mutable bool bar_called_;
 };
 
+struct CallResult {
+	bool called{false};
+
+	std::function<void(void)> fn()
+	{
+		return [this]() { called = true; };
+	}
+};
+
 UTEST_CASE(test_arg0)
 {
-	call_result<> res;
+	CallResult res;
 	Signal<void(void)> sig;
-	sig.connect(std::bind(
-		&f0, std::ref(res)));
+	sig.connect(res.fn());
 	sig();
 	UTEST_ASSERT(res.called);
 }
 
 UTEST_CASE(test_arg1)
 {
-	call_result<int> res;
+	bool called{false};
+	int arg{0};
 	Signal<void(int)> sig;
-	sig.connect(std::bind(
-		&f<int>, std::ref(res),
-		std::placeholders::_1));
+	sig.connect([&called, &arg](auto a) { called = true; arg = a; });
 	sig(1);
-	UTEST_ASSERT(res.called);
-	UTEST_ASSERT(res.a0 == 1);
+	UTEST_ASSERT(called);
+	UTEST_ASSERT(arg == 1);
 }
 
 UTEST_CASE(test_arg2)
 {
-	call_result<int, int> res;
+	bool called{false};
+	int arg0{0};
+	int arg1{0};
 	Signal<void(int, int)> sig;
-	sig.connect(std::bind(
-		&f<int, int>, std::ref(res),
-		std::placeholders::_1,
-		std::placeholders::_2));
+	sig.connect([&called, &arg0, &arg1](auto a0, auto a1) {
+		called = true; arg0 = a0; arg1 = a1; });
 	sig(1, 2);
-	UTEST_ASSERT(res.called);
-	UTEST_ASSERT(res.a0 == 1);
-	UTEST_ASSERT(res.a1 == 2);
+	UTEST_ASSERT(called);
+	UTEST_ASSERT(arg0 == 1);
+	UTEST_ASSERT(arg1 == 2);
 }
 
 UTEST_CASE(test_memfun)
@@ -233,10 +118,10 @@ UTEST_CASE(test_signal_proxy)
 {
 	B b;
 
-	call_result<> res1;
-	call_result<> res2;
-	b.sig().connect(std::bind(&f0, std::ref(res1)));
-	b.sigr.connect(std::bind(&f0, std::ref(res2)));
+	CallResult res1;
+	CallResult res2;
+	b.sig().connect(res1.fn());
+	b.sigr.connect(res2.fn());
 	b.run();
 
 	UTEST_ASSERT(res1.called);
@@ -270,16 +155,14 @@ UTEST_CASE(test_call_order)
 
 UTEST_CASE(test_connection_disconnect)
 {
-	call_result<> res1;
-	call_result<> res2;
+	CallResult res1;
+	CallResult res2;
 	Signal<void(void)> sig;
-	auto conn1(sig.connect(std::bind(
-		&f0, std::ref(res1))));
+	auto conn1(sig.connect(res1.fn()));
 	UTEST_ASSERT(conn1.connected());
 	UTEST_ASSERT(sig.slots() == 1);
 
-	auto conn2(sig.connect(std::bind(
-		&f0, std::ref(res2))));
+	auto conn2(sig.connect(res2.fn()));
 	UTEST_ASSERT(conn2.connected());
 	UTEST_ASSERT(sig.slots() == 2);
 
@@ -301,7 +184,7 @@ UTEST_CASE(test_connection_disconnect)
 
 UTEST_CASE(test_connection)
 {
-	call_result<> res;
+	CallResult res;
 	Signal<void(void)> sig;
 
 	Connection conn;
@@ -310,8 +193,7 @@ UTEST_CASE(test_connection)
 	UTEST_ASSERT(!conn.connected());
 	UTEST_ASSERT(sig.slots() == 0);
 
-	auto conn1(sig.connect(std::bind(
-		&f0, std::ref(res))));
+	auto conn1(sig.connect(res.fn()));
 	UTEST_ASSERT(sig.slots() == 1);
 	UTEST_ASSERT(conn1.connected());
 
@@ -368,9 +250,8 @@ UTEST_CASE(test_connection_disconnect_next)
 	auto conn1(sig.connect(std::bind(
 		&disconnect, std::ref(called), std::ref(conn))));
 
-	call_result<> res;
-	auto conn2(sig.connect(std::bind(
-		&f0, std::ref(res))));
+	CallResult res;
+	auto conn2(sig.connect(res.fn()));
 	UTEST_ASSERT(sig.slots() == 2);
 
 	conn = conn2;
@@ -399,9 +280,8 @@ UTEST_CASE(test_connection_disconnect_prev)
 	Signal<void(void)> sig;
 	Connection conn;
 
-	call_result<> res;
-	auto conn1(sig.connect(std::bind(
-		&f0, std::ref(res))));
+	CallResult res;
+	auto conn1(sig.connect(res.fn()));
 	auto conn2(sig.connect(std::bind(
 		&disconnect, std::ref(called), std::ref(conn))));
 	UTEST_ASSERT(sig.slots() == 2);
@@ -495,8 +375,8 @@ UTEST_CASE(test_const_signal)
 {
 	C c;
 
-	call_result<> res;
-	c.sig.connect(std::bind(&f0, std::ref(res)));
+	CallResult res;
+	c.sig.connect(res.fn());
 	c.run();
 
 	UTEST_ASSERT(res.called);
@@ -527,22 +407,19 @@ UTEST_CASE(test_connect_in_callback)
 
 UTEST_CASE(test_auto_connection)
 {
-	call_result<> res1;
-	call_result<> res2;
-	call_result<> res3;
+	CallResult res1;
+	CallResult res2;
+	CallResult res3;
 	Signal<void(void)> sig;
 
-	AutoConnection conn1(sig.connect(std::bind(
-		&f0, std::ref(res1))));
+	AutoConnection conn1(sig.connect(res1.fn()));
 	UTEST_ASSERT(conn1.connected());
 	{
-		AutoConnection conn2(sig.connect(std::bind(
-			&f0, std::ref(res2))));
+		AutoConnection conn2(sig.connect(res2.fn()));
 		UTEST_ASSERT(conn2.connected());
 		UTEST_ASSERT(sig.slots() == 2);
 
-		AutoConnection conn3(sig.connect(std::bind(
-			&f0, std::ref(res3))));
+		AutoConnection conn3(sig.connect(res3.fn()));
 		UTEST_ASSERT(conn3.connected());
 		UTEST_ASSERT(sig.slots() == 3);
 
@@ -611,12 +488,12 @@ UTEST_CASE(test_functor_0arg)
 
 UTEST_CASE(test_signal_deconstruct)
 {
-	call_result<> res;
+	CallResult res;
 	Connection conn;
 	UTEST_ASSERT(!conn.connected());
 	{
 		Signal<void(void)> sig;
-		conn = sig.connect(std::bind(&f0, std::ref(res)));
+		conn = sig.connect(res.fn());
 		UTEST_ASSERT(conn.connected());
 	}
 	UTEST_ASSERT(!conn.connected());
@@ -624,15 +501,15 @@ UTEST_CASE(test_signal_deconstruct)
 
 UTEST_CASE(test_connection_assign)
 {
-	call_result<> res1;
+	CallResult res1;
 	Signal<void(void)> sig1;
-	auto conn1(sig1.connect(std::bind(&f0, std::ref(res1))));
+	auto conn1(sig1.connect(res1.fn()));
 	UTEST_ASSERT(conn1.connected());
 	UTEST_ASSERT(sig1.slots() == 1);
 
-	call_result<> res2;
+	CallResult res2;
 	Signal<void(void)> sig2;
-	auto conn2(sig2.connect(std::bind(&f0, std::ref(res2))));
+	auto conn2(sig2.connect(res2.fn()));
 	UTEST_ASSERT(conn2.connected());
 	UTEST_ASSERT(sig2.slots() == 1);
 
@@ -748,13 +625,13 @@ UTEST_CASE(test_loose_coupling)
 
 UTEST_CASE(test_movable_signal)
 {
-	call_result<> res_foo;
-	call_result<> res_bar;
-	call_result<> res_baz;
+	CallResult res_foo;
+	CallResult res_bar;
+	CallResult res_baz;
 	std::map<std::string, Signal<void(void)>> sig;
-	sig["foo"].connect(std::bind(&f0, std::ref(res_foo)));
-	sig["bar"].connect(std::bind(&f0, std::ref(res_bar)));
-	sig["baz"].connect(std::bind(&f0, std::ref(res_baz)));
+	sig["foo"].connect(res_foo.fn());
+	sig["bar"].connect(res_bar.fn());
+	sig["baz"].connect(res_baz.fn());
 
 	sig["foo"]();
 	UTEST_ASSERT(res_foo.called);
@@ -775,15 +652,15 @@ UTEST_CASE(test_movable_auto_connection)
 	Signal<void(void)> sig2;
 	Signal<void(void)> sig3;
 
-	call_result<> res1;
-	call_result<> res2;
-	call_result<> res3;
+	CallResult res1;
+	CallResult res2;
+	CallResult res3;
 
 	{
 		std::vector<AutoConnection> conn;
-		conn.push_back(sig1.connect(std::bind(&f0, std::ref(res1))));
-		conn.push_back(sig2.connect(std::bind(&f0, std::ref(res2))));
-		conn.push_back(sig3.connect(std::bind(&f0, std::ref(res3))));
+		conn.push_back(sig1.connect(res1.fn()));
+		conn.push_back(sig2.connect(res2.fn()));
+		conn.push_back(sig3.connect(res3.fn()));
 		sig1();
 		sig2();
 		sig3();
