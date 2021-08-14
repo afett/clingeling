@@ -49,11 +49,8 @@ public:
 	Fixture()
 	:
 		model(Baresip::Model::create())
-	{
-		connect(model->on_event, on_event);
-	}
+	{ }
 
-	Signal<void(Baresip::Event::Any const&)> on_event;
 	std::unique_ptr<Baresip::Model> model;
 };
 
@@ -72,7 +69,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 	model->on_call.connect([&call](auto const& c) { call = c; });
 
 	// incomming call
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Incoming,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Incoming,
@@ -95,7 +92,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 	call->on_state_change.connect([&call_state](auto state){ call_state = state; });
 
 	// incomming call accepted
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Established,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Incoming,
@@ -107,7 +104,7 @@ UTEST_CASE_WITH_FIXTURE(incoming_call_test, Fixture)
 	UTEST_ASSERT_EQUAL(Baresip::Call::State::Established, call->state());
 
 	// incomming call closed
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Closed,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Incoming,
@@ -128,7 +125,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 	model->on_call.connect([&call](auto const& c) { call = c; });
 
 	// outgoing
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Ringing,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Outgoing,
@@ -151,7 +148,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 	call->on_state_change.connect([&call_state](auto state){ call_state = state; });
 
 	// outgoing call accepted
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Established,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Outgoing,
@@ -163,7 +160,7 @@ UTEST_CASE_WITH_FIXTURE(outgoing_call_test, Fixture)
 	UTEST_ASSERT_EQUAL(Baresip::Call::State::Established, call->state());
 
 	// incomming call closed
-	on_event(Baresip::Event::Any{Baresip::Event::Call{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Call{
 		Baresip::Event::Call::Type::Closed,
 		"sip:9999-1@asterisk.example.com",
 		Baresip::Event::Call::Direction::Outgoing,
@@ -179,7 +176,7 @@ UTEST_CASE_WITH_FIXTURE(registration_ok_test, Fixture)
 {
 	UTEST_ASSERT_EQUAL(Baresip::Model::Registration::Unknown, model->registration());
 
-	on_event(Baresip::Event::Any{Baresip::Event::Register{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Register{
 		Baresip::Event::Register::Type::Ok,
 		"sip:9999-1@asterisk.example.com",
 		"200 OK"}});
@@ -191,7 +188,7 @@ UTEST_CASE_WITH_FIXTURE(registration_fail_test, Fixture)
 {
 	UTEST_ASSERT_EQUAL(Baresip::Model::Registration::Unknown, model->registration());
 
-	on_event(Baresip::Event::Any{Baresip::Event::Register{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Register{
 		Baresip::Event::Register::Type::Fail,
 		"sip:9999-1@asterisk.example.com",
 		"401 Unauthorized"}});
@@ -202,14 +199,14 @@ UTEST_CASE_WITH_FIXTURE(registration_fail_test, Fixture)
 UTEST_CASE_WITH_FIXTURE(registration_unregistering_test, Fixture)
 {
 	// move to registration ok first
-	on_event(Baresip::Event::Any{Baresip::Event::Register{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Register{
 		Baresip::Event::Register::Type::Ok,
 		"sip:9999-1@asterisk.example.com",
 		"200 OK"}});
 	UTEST_ASSERT_EQUAL(Baresip::Model::Registration::Ok, model->registration());
 
 	// unregistering
-	on_event(Baresip::Event::Any{Baresip::Event::Register{
+	model->on_event(Baresip::Event::Any{Baresip::Event::Register{
 		Baresip::Event::Register::Type::Unregistering,
 		"sip:9999-1@asterisk.example.com",
 		""}});
