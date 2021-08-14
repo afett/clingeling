@@ -57,7 +57,7 @@ UTEST_CASE(test_arg1)
 	sig.connect([&called, &arg](auto a) { called = true; arg = a; });
 	sig(1);
 	UTEST_ASSERT(called);
-	UTEST_ASSERT(arg == 1);
+	UTEST_ASSERT_EQUAL(1, arg);
 }
 
 UTEST_CASE(test_arg2)
@@ -70,8 +70,8 @@ UTEST_CASE(test_arg2)
 		called = true; arg0 = a0; arg1 = a1; });
 	sig(1, 2);
 	UTEST_ASSERT(called);
-	UTEST_ASSERT(arg0 == 1);
-	UTEST_ASSERT(arg1 == 2);
+	UTEST_ASSERT_EQUAL(1, arg0);
+	UTEST_ASSERT_EQUAL(2, arg1);
 }
 
 UTEST_CASE(test_memfun)
@@ -82,7 +82,7 @@ UTEST_CASE(test_memfun)
 		&a, std::placeholders::_1));
 	sig("hello");
 	UTEST_ASSERT(a.foo_called_);
-	UTEST_ASSERT(a.foo_arg_ == "hello");
+	UTEST_ASSERT_EQUAL("hello", a.foo_arg_);
 }
 
 UTEST_CASE(test_const_memfun)
@@ -130,7 +130,7 @@ UTEST_CASE(test_signal_proxy)
 
 void count_call(size_t & called, size_t index)
 {
-	UTEST_ASSERT(called == index);
+	UTEST_ASSERT_EQUAL(index, called);
 	++called;
 }
 
@@ -148,9 +148,9 @@ UTEST_CASE(test_call_order)
 		&count_call, std::ref(called), 3));
 	sig.connect(std::bind(
 		&count_call, std::ref(called), 4));
-	UTEST_ASSERT(sig.slots() == 5);
+	UTEST_ASSERT_EQUAL(size_t(5), sig.slots());
 	sig();
-	UTEST_ASSERT(called == 5);
+	UTEST_ASSERT_EQUAL(size_t(5), called);
 }
 
 UTEST_CASE(test_connection_disconnect)
@@ -160,11 +160,11 @@ UTEST_CASE(test_connection_disconnect)
 	Signal<void(void)> sig;
 	auto conn1(sig.connect(res1.fn()));
 	UTEST_ASSERT(conn1.connected());
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 
 	auto conn2(sig.connect(res2.fn()));
 	UTEST_ASSERT(conn2.connected());
-	UTEST_ASSERT(sig.slots() == 2);
+	UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 	sig();
 	UTEST_ASSERT(res1.called);
@@ -173,7 +173,7 @@ UTEST_CASE(test_connection_disconnect)
 	conn1.disconnect();
 	UTEST_ASSERT(!conn1.connected());
 	UTEST_ASSERT(conn2.connected());
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 
 	res1.called = false;
 	res2.called = false;
@@ -191,10 +191,10 @@ UTEST_CASE(test_connection)
 	UTEST_ASSERT(!conn.connected());
 	conn.disconnect();
 	UTEST_ASSERT(!conn.connected());
-	UTEST_ASSERT(sig.slots() == 0);
+	UTEST_ASSERT_EQUAL(size_t(0), sig.slots());
 
 	auto conn1(sig.connect(res.fn()));
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	UTEST_ASSERT(conn1.connected());
 
 	conn = conn1;
@@ -203,9 +203,9 @@ UTEST_CASE(test_connection)
 	auto conn2(conn);
 	UTEST_ASSERT(conn2.connected());
 
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	conn2.disconnect();
-	UTEST_ASSERT(sig.slots() == 0);
+	UTEST_ASSERT_EQUAL(size_t(0), sig.slots());
 	UTEST_ASSERT(!conn.connected());
 	UTEST_ASSERT(!conn1.connected());
 	UTEST_ASSERT(!conn2.connected());
@@ -225,7 +225,7 @@ UTEST_CASE(test_connection_disconnect_self)
 	Connection conn;
 	auto conn1(sig.connect(std::bind(
 		&disconnect, std::ref(called), std::ref(conn))));
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 
 	conn = conn1;
 	UTEST_ASSERT(conn.connected());
@@ -235,7 +235,7 @@ UTEST_CASE(test_connection_disconnect_self)
 	UTEST_ASSERT(called);
 	UTEST_ASSERT(!conn.connected());
 	UTEST_ASSERT(!conn1.connected());
-	UTEST_ASSERT(sig.slots() == 0);
+	UTEST_ASSERT_EQUAL(size_t(0), sig.slots());
 
 	called = false;
 	sig();
@@ -252,7 +252,7 @@ UTEST_CASE(test_connection_disconnect_next)
 
 	CallResult res;
 	auto conn2(sig.connect(res.fn()));
-	UTEST_ASSERT(sig.slots() == 2);
+	UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 	conn = conn2;
 	UTEST_ASSERT(conn.connected());
@@ -260,7 +260,7 @@ UTEST_CASE(test_connection_disconnect_next)
 	UTEST_ASSERT(conn2.connected());
 
 	sig();
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	UTEST_ASSERT(called);
 	UTEST_ASSERT(!res.called);
 	UTEST_ASSERT(conn1.connected());
@@ -284,7 +284,7 @@ UTEST_CASE(test_connection_disconnect_prev)
 	auto conn1(sig.connect(res.fn()));
 	auto conn2(sig.connect(std::bind(
 		&disconnect, std::ref(called), std::ref(conn))));
-	UTEST_ASSERT(sig.slots() == 2);
+	UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 	conn = conn1;
 	UTEST_ASSERT(conn.connected());
@@ -292,7 +292,7 @@ UTEST_CASE(test_connection_disconnect_prev)
 	UTEST_ASSERT(conn2.connected());
 
 	sig();
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	UTEST_ASSERT(called);
 	UTEST_ASSERT(res.called);
 	UTEST_ASSERT(!conn1.connected());
@@ -346,14 +346,14 @@ UTEST_CASE(test_connection_disconnect_all)
 	Signal<void(void)> sig;
 	E e(sig);
 
-	UTEST_ASSERT(sig.slots() == 8);
+	UTEST_ASSERT_EQUAL(size_t(8), sig.slots());
 	sig();
-	UTEST_ASSERT(sig.slots() == 0);
-	UTEST_ASSERT(e.called == 5);
+	UTEST_ASSERT_EQUAL(size_t(0), sig.slots());
+	UTEST_ASSERT_EQUAL(size_t(5), e.called);
 
 	e.called = 0;
 	sig();
-	UTEST_ASSERT(e.called == 0);
+	UTEST_ASSERT_EQUAL(size_t(0), e.called);
 }
 
 class C {
@@ -394,15 +394,15 @@ UTEST_CASE(test_connect_in_callback)
 	Signal<void(void)> sig;
 
 	sig.connect(std::bind(&connect, std::ref(called), std::ref(sig)));
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	sig();
-	UTEST_ASSERT(called == 1);
-	UTEST_ASSERT(sig.slots() == 2);
+	UTEST_ASSERT_EQUAL(size_t(1), called);
+	UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 	called = 0;
 
 	sig();
-	UTEST_ASSERT(called == 2);
-	UTEST_ASSERT(sig.slots() == 4);
+	UTEST_ASSERT_EQUAL(size_t(2), called);
+	UTEST_ASSERT_EQUAL(size_t(4), sig.slots());
 }
 
 UTEST_CASE(test_auto_connection)
@@ -417,11 +417,11 @@ UTEST_CASE(test_auto_connection)
 	{
 		AutoConnection conn2(sig.connect(res2.fn()));
 		UTEST_ASSERT(conn2.connected());
-		UTEST_ASSERT(sig.slots() == 2);
+		UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 		AutoConnection conn3(sig.connect(res3.fn()));
 		UTEST_ASSERT(conn3.connected());
-		UTEST_ASSERT(sig.slots() == 3);
+		UTEST_ASSERT_EQUAL(size_t(3), sig.slots());
 
 		sig();
 
@@ -434,7 +434,7 @@ UTEST_CASE(test_auto_connection)
 
 		conn3.disconnect();
 		UTEST_ASSERT(!conn3.connected());
-		UTEST_ASSERT(sig.slots() == 2);
+		UTEST_ASSERT_EQUAL(size_t(2), sig.slots());
 
 		sig();
 
@@ -445,7 +445,7 @@ UTEST_CASE(test_auto_connection)
 		res2.called = false;
 	}
 
-	UTEST_ASSERT(sig.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.slots());
 	UTEST_ASSERT(conn1.connected());
 
 	sig();
@@ -505,21 +505,21 @@ UTEST_CASE(test_connection_assign)
 	Signal<void(void)> sig1;
 	auto conn1(sig1.connect(res1.fn()));
 	UTEST_ASSERT(conn1.connected());
-	UTEST_ASSERT(sig1.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig1.slots());
 
 	CallResult res2;
 	Signal<void(void)> sig2;
 	auto conn2(sig2.connect(res2.fn()));
 	UTEST_ASSERT(conn2.connected());
-	UTEST_ASSERT(sig2.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig2.slots());
 
 	conn2 = conn1;
-	UTEST_ASSERT(sig1.slots() == 1);
-	UTEST_ASSERT(sig2.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig1.slots());
+	UTEST_ASSERT_EQUAL(size_t(1), sig2.slots());
 
 	conn2.disconnect();
-	UTEST_ASSERT(sig1.slots() == 0);
-	UTEST_ASSERT(sig2.slots() == 1);
+	UTEST_ASSERT_EQUAL(size_t(0), sig1.slots());
+	UTEST_ASSERT_EQUAL(size_t(1), sig2.slots());
 
 	sig1();
 	UTEST_ASSERT(!res1.called);
@@ -620,7 +620,7 @@ UTEST_CASE(test_loose_coupling)
 	p.trigger();
 	p.trigger();
 
-	UTEST_ASSERT(c.count == 3);
+	UTEST_ASSERT_EQUAL(size_t(3), c.count);
 }
 
 UTEST_CASE(test_movable_signal)
@@ -640,7 +640,7 @@ UTEST_CASE(test_movable_signal)
 	sig["baz"]();
 	UTEST_ASSERT(res_baz.called);
 
-	UTEST_ASSERT(sig.erase("foo") == 1);
+	UTEST_ASSERT_EQUAL(size_t(1), sig.erase("foo"));
 	res_foo.called = false;
 	sig["foo"]();
 	UTEST_ASSERT(!res_foo.called);
