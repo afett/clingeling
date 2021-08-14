@@ -303,40 +303,39 @@ UTEST_CASE(test_connection_disconnect_prev)
 	UTEST_ASSERT(!res.called);
 }
 
+namespace {
+
 class E {
 public:
 	E(Signal<void(void)> & sig)
 	:
 		called(0)
 	{
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::disconnect_all, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-		conn_.push_back(sig.connect(std::bind(&E::foo, this)));
-	}
-
-	void foo()
-	{
-		++called;
+		auto call_counter{[this]() { ++called; }};
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect([this]() { ++called; disconnect_all(); }));
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect(call_counter));
+		conn_.push_back(sig.connect(call_counter));
 	}
 
 	void disconnect_all()
 	{
-		++called;
-		for (auto i(0U); i < conn_.size(); ++i) {
-			UTEST_ASSERT(conn_[i].connected());
-			conn_[i].disconnect();
-			UTEST_ASSERT(!conn_[i].connected());
+		for (auto & conn: conn_ ) {
+			UTEST_ASSERT(conn.connected());
+			conn.disconnect();
+			UTEST_ASSERT(!conn.connected());
 		}
 	}
 
 	std::vector<Connection> conn_;
 	size_t called;
 };
+
+}
 
 UTEST_CASE(test_connection_disconnect_all)
 {
