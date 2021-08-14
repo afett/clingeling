@@ -263,12 +263,14 @@ public:
 
 	Signal1(Signal1 && o)
 	:
-		cb_(std::move(o.cb_))
+		cb_(std::move(o.cb_)),
+		fn_(std::move(o.fn_))
 	{ }
 
 	Signal1 & operator=(Signal1 && o)
 	{
 		cb_ = std::move(o.cb_);
+		fn_ = std::move(o.fn_);
 		return *this;
 	}
 
@@ -281,32 +283,32 @@ public:
 	// of this signal at the time connect() is called.
 	Connection connect(std::function<T> const& fn) final
 	{
-		cb_ = std::make_shared<Callback>(this, fn);
+		cb_ = std::make_shared<Callback>(this);
+		fn_ = fn;
 		return Connection(cb_);
 	}
 
 	template <typename... Args>
 	void operator()(Args && ...args)
 	{
-		if (cb_) {
-			cb_->fn(std::forward<Args>(args)...);
+		if (fn_) {
+			fn_(std::forward<Args>(args)...);
 		}
 	}
 
 	template <typename... Args>
 	void operator()(Args && ...args) const
 	{
-		if (cb_) {
-			cb_->fn(std::forward<Args>(args)...);
+		if (fn_) {
+			fn_(std::forward<Args>(args)...);
 		}
 	}
 
 private:
 	struct Callback : public CallbackBase {
-		Callback(Signal1<T> *owner_, std::function<T> const& fn_)
+		explicit Callback(Signal1<T> *owner_)
 		:
-			owner(owner_),
-			fn(fn_)
+			owner(owner_)
 		{ }
 
 		void disconnect() final
@@ -314,20 +316,20 @@ private:
 			if (owner) {
 				owner->del_callback(this);
 				owner = nullptr;
-				fn = nullptr;
 			}
 		}
 
 		Signal1<T> *owner;
-		std::function<T> fn;
 	};
 
 	void del_callback(Callback *)
 	{
 		cb_.reset();
+		fn_ = nullptr;
 	}
 
-	std::shared_ptr<Callback> cb_;
+	std::shared_ptr<Callback> cb_{nullptr};
+	std::function<T> fn_{nullptr};
 };
 
 template <typename T>
