@@ -259,47 +259,8 @@ private:
 template <typename T>
 class SlotProxy {
 public:
-	SlotProxy() = default;
 	SlotProxy(SlotProxy const&) = delete;
-	SlotProxy(SlotProxy &&) = delete;
 	SlotProxy & operator=(SlotProxy const&) = delete;
-	SlotProxy & operator=(SlotProxy &&) = delete;
-
-	virtual Connection connect(SignalProxy<T> &) = 0;
-	virtual ~SlotProxy() = default;
-};
-
-template <typename T>
-class Slot : public SlotProxy<T> {
-public:
-	Slot() = default;
-	Slot(Slot &&) = default;
-	Slot & operator=(Slot &&) = default;
-
-	Slot(Slot const&) = delete;
-	Slot & operator=(Slot const&) = delete;
-
-	explicit Slot(std::function<T> const& fn)
-	:
-		fn_(fn)
-	{ }
-
-	void reset(std::function<T> const& fn)
-	{
-		fn_ = fn;
-	}
-
-	Connection connect(SignalProxy<T> & sig) final
-	{
-		auto conn{sig.connect(std::ref(*this))};
-		conn_.push_back(conn);
-		return conn;
-	}
-
-	void disconnect()
-	{
-		conn_.clear();
-	}
 
 	template <typename... Args>
 	void operator()(Args && ...args)
@@ -317,8 +278,55 @@ public:
 		}
 	}
 
-private:
+	virtual Connection connect(SignalProxy<T> &) = 0;
+	virtual ~SlotProxy() = default;
+
+protected:
+	SlotProxy() = default;
+	SlotProxy(SlotProxy &&) = default;
+	SlotProxy & operator=(SlotProxy &&) = default;
+
+	explicit SlotProxy(std::function<T> const& fn)
+	:
+		fn_(fn)
+	{ }
+
 	std::function<T> fn_;
+};
+
+template <typename T>
+class Slot : public SlotProxy<T> {
+public:
+	Slot() = default;
+	Slot(Slot &&) = default;
+	Slot & operator=(Slot &&) = default;
+
+	Slot(Slot const&) = delete;
+	Slot & operator=(Slot const&) = delete;
+
+	explicit Slot(std::function<T> const& fn)
+	:
+		SlotProxy<T>(fn)
+	{ }
+
+	void reset(std::function<T> const& fn)
+	{
+		this->fn_ = fn;
+	}
+
+	Connection connect(SignalProxy<T> & sig) final
+	{
+		auto conn{sig.connect(std::ref(*this))};
+		conn_.push_back(conn);
+		return conn;
+	}
+
+	void disconnect()
+	{
+		conn_.clear();
+	}
+
+private:
 	std::vector<AutoConnection> conn_;
 };
 

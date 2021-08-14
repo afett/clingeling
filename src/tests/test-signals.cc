@@ -1066,4 +1066,12 @@ UTEST_CASE(test_slot_auto_disconnect)
 	UTEST_ASSERT_EQUAL(0, res);
 }
 
+UTEST_CASE(test_slot_direct_call)
+{
+	int res{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+	slot1(42);
+	UTEST_ASSERT_EQUAL(42, res);
+}
+
 }}
