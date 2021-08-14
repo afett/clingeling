@@ -1074,4 +1074,32 @@ UTEST_CASE(test_slot_direct_call)
 	UTEST_ASSERT_EQUAL(42, res);
 }
 
+UTEST_CASE(test_slot_move_ctor)
+{
+	int res{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+	Slot<void(int)> slot2{std::move(slot1)};
+	slot1(42);
+	UTEST_ASSERT_EQUAL(0, res);
+	slot2(42);
+	UTEST_ASSERT_EQUAL(42, res);
+}
+
+UTEST_CASE(test_slot_move_assign)
+{
+	int res{0};
+	int res2{0};
+	Slot<void(int)> slot1{[&res](auto arg){ res = arg; }};
+	Slot<void(int)> slot2{[&res2](auto arg){ res2 = arg; }};
+
+	slot2 = std::move(slot1);
+
+	slot1(42);
+	UTEST_ASSERT_EQUAL(0, res);
+	UTEST_ASSERT_EQUAL(0, res2);
+	slot2(42);
+	UTEST_ASSERT_EQUAL(42, res);
+	UTEST_ASSERT_EQUAL(0, res2);
+}
+
 }}
