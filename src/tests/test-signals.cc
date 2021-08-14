@@ -676,18 +676,6 @@ UTEST_CASE(test_movable_auto_connection)
 	UTEST_ASSERT(!res3.called);
 }
 
-UTEST_CASE(test_lambda)
-{
-	Signal<void(void)> sig;
-
-	bool cap(false);
-	sig.connect([&cap](){ cap = true; });
-
-	UTEST_ASSERT(!cap);
-	sig();
-	UTEST_ASSERT(cap);
-}
-
 class MyCallback : public CallbackBase {
 public:
 	void disconnect() override
