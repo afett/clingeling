@@ -128,26 +128,17 @@ UTEST_CASE(test_signal_proxy)
 	UTEST_ASSERT(res2.called);
 }
 
-void count_call(size_t & called, size_t index)
-{
-	UTEST_ASSERT_EQUAL(index, called);
-	++called;
-}
-
 UTEST_CASE(test_call_order)
 {
 	Signal<void(void)> sig;
 	size_t called(0);
-	sig.connect(std::bind(
-		&count_call, std::ref(called), 0));
-	sig.connect(std::bind(
-		&count_call, std::ref(called), 1));
-	sig.connect(std::bind(
-		&count_call, std::ref(called), 2));
-	sig.connect(std::bind(
-		&count_call, std::ref(called), 3));
-	sig.connect(std::bind(
-		&count_call, std::ref(called), 4));
+
+	sig.connect([&called]() { UTEST_ASSERT_EQUAL(size_t(0), called++); });
+	sig.connect([&called]() { UTEST_ASSERT_EQUAL(size_t(1), called++); });
+	sig.connect([&called]() { UTEST_ASSERT_EQUAL(size_t(2), called++); });
+	sig.connect([&called]() { UTEST_ASSERT_EQUAL(size_t(3), called++); });
+	sig.connect([&called]() { UTEST_ASSERT_EQUAL(size_t(4), called++); });
+
 	UTEST_ASSERT_EQUAL(size_t(5), sig.slots());
 	sig();
 	UTEST_ASSERT_EQUAL(size_t(5), called);
