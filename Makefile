@@ -28,6 +28,8 @@ COV_OBJ = $(SRC:%.cc=%.cov.o)
 TEST_SRC = $(wildcard src/tests/*.cc)
 TEST_OBJ = $(TEST_SRC:%.cc=%.cov.o)
 TEST_LIB = libclingeling_test.a
+TEST_CXXFLAGS = $(CXXFLAGS) -O0 -g -coverage -fsanitize=address
+TEST_LDFLAGS = $(LDFLAGS) -static-libasan
 
 ALL_OBJ = $(OBJ) $(TEST_OBJ) $(COV_OBJ)
 GCNO = $(ALL_OBJ:%.o=%.gcno)
@@ -42,13 +44,13 @@ $(TEST_LIB): $(COV_OBJ)
 	ar rcs $@ $^
 
 %.cov.o : %.cc
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -O0 -g --coverage -c $< -o $@
+	$(CXX) $(TEST_CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o : %.cc
 	$(CXX) $(CXXFLAGS) $(DEBUG_CXXFLAGS) $(CPPFLAGS) -fPIC -c $< -o $@
 
 $(TESTS): $(TEST_LIB) $(TEST_OBJ)
-	$(CXX) -o $@ $(TEST_OBJ) $(TEST_LIB) $(LDFLAGS) --coverage $(LIBS)
+	$(CXX) $(TEST_CXXFLAGS) -o $@ $(TEST_OBJ) $(TEST_LIB) $(TEST_LDFLAGS) $(LIBS)
 
 run_tests: $(TESTS)
 	./$(TESTS)
