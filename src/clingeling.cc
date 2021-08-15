@@ -13,6 +13,54 @@
 #include "baresip/model.h"
 #include "source-location.h"
 
+struct EventPipe {
+public:
+	SignalProxy<void(void)> & on_event{on_event_};
+	SlotProxy<void(EPoll::Events const&)> & on_fd_event{on_fd_event_};
+
+	explicit EventPipe(Posix::Pipe const& pipe)
+	:
+		pipe_{pipe},
+		on_fd_event_{[this](auto const& ev) { handle_fd_event(ev); }}
+	{ }
+
+	void trigger()
+	{
+		int wakeup{0};
+		std::get<1>(pipe_)->write(&wakeup, sizeof(wakeup));
+	}
+
+	std::shared_ptr<Posix::Fd> fd() const
+	{
+		return std::get<0>(pipe_);
+	}
+
+	EPoll::Events ev() const
+	{
+		return EPoll::Events{EPoll::Event::In};
+	}
+
+private:
+	void handle_fd_event(EPoll::Events const& ev)
+	{
+		if (ev != EPoll::Event::In) {
+			throw std::runtime_error("bad epoll event");
+		}
+
+		int wakeup{0};
+		auto res = std::get<0>(pipe_)->read(&wakeup, sizeof(wakeup));
+		if (res == sizeof(wakeup)) {
+			on_event_();
+			return;
+		}
+		throw std::runtime_error("bad read from pipe");
+	}
+
+	Posix::Pipe pipe_;
+	Signal<void(void)> on_event_;
+	Slot<void(EPoll::Events const&)> on_fd_event_;
+};
+
 int clingeling(int, char *[])
 {
 	auto poller_factory = EPoll::CtrlFactory::create();
@@ -31,20 +79,10 @@ int clingeling(int, char *[])
 	auto pipe_factory = Posix::PipeFactory::create();
 	auto pipe = pipe_factory->make_pipe(Posix::PipeFactory::Params{false, true});
 
+	EventPipe wakeup(pipe);
 	auto run{true};
-	poller->add(std::get<0>(pipe), EPoll::Events{EPoll::Event::In}, [&run, &pipe](auto ev) {
-		if (ev != EPoll::Event::In) {
-			throw std::runtime_error("bad epoll event");
-		}
-
-		int wakeup{0};
-		auto res = std::get<0>(pipe)->read(&wakeup, sizeof(wakeup));
-		if (res == sizeof(wakeup)) {
-			run = false;
-			return;
-		}
-		throw std::runtime_error("bad read from pipe");
-	});
+	wakeup.on_event.connect([&run]() { run = false; });
+	poller->add(wakeup.fd(), wakeup.ev(), [&wakeup](auto const& ev) { wakeup.on_fd_event(ev); });
 
 	try {
 		do {
