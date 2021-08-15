@@ -354,8 +354,12 @@ public:
 		}
 	}
 
-	virtual Connection connect(SignalProxy<T> &) = 0;
-	virtual ~SlotProxy() = default;
+	Connection connect(SignalProxy<T> & sig)
+	{
+		auto conn{sig.connect(std::ref(*this))};
+		conn_.push_back(conn);
+		return conn;
+	}
 
 protected:
 	SlotProxy() = default;
@@ -368,6 +372,7 @@ protected:
 	{ }
 
 	std::function<T> fn_;
+	std::vector<AutoConnection> conn_;
 };
 
 template <typename T>
@@ -390,20 +395,10 @@ public:
 		this->fn_ = fn;
 	}
 
-	Connection connect(SignalProxy<T> & sig) final
-	{
-		auto conn{sig.connect(std::ref(*this))};
-		conn_.push_back(conn);
-		return conn;
-	}
-
 	void disconnect()
 	{
-		conn_.clear();
+		this->conn_.clear();
 	}
-
-private:
-	std::vector<AutoConnection> conn_;
 };
 
 template <typename T>
