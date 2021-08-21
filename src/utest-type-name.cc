@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <cxxabi.h>
+#include <stdexcept>
 
 #include "utest/type-name.h"
 

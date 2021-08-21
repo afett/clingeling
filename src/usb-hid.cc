@@ -7,8 +7,8 @@
 #include "usb/hid.h"
 
 #include "posix/char-dev.h"
-
 #include <linux/hiddev.h>
+#include <stdexcept>
 
 namespace USB {
 namespace Hid {

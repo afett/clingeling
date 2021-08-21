@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <cstring>
+#include <stdexcept>
 
 #include "posix/socket-address.h"
 #include "posix/inet-address.h"

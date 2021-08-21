@@ -7,6 +7,7 @@
 #include "baresip/command.h"
 
 #include <functional>
+#include <stdexcept>
 
 namespace {
 
