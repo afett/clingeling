@@ -76,6 +76,7 @@ public:
 	};
 
 	static std::unique_ptr<SocketFactory> create();
+	virtual std::shared_ptr<Socket> make_socket(std::tuple<int, int, int> const&, Fd::Options const&) const = 0;
 	virtual std::shared_ptr<Socket> make_socket(Params const&) const = 0;
 	virtual std::shared_ptr<StreamSocket> make_stream_socket(Params const&) const = 0;
 	virtual ~SocketFactory() = default;

@@ -159,6 +159,7 @@ private:
 class SocketFactoryImpl : public SocketFactory {
 public:
 	static std::unique_ptr<SocketFactory> create();
+	std::shared_ptr<Socket> make_socket(std::tuple<int, int, int> const&, Fd::Options const&) const override;
 	std::shared_ptr<Socket> make_socket(Params const&) const override;
 	std::shared_ptr<StreamSocket> make_stream_socket(Params const&) const override;
 };
@@ -194,28 +195,32 @@ std::tuple<int, int, int> socket_params(SocketFactory::Params const& params)
 		break;
 	}
 
-	if (params.options & Fd::Option::nonblock) {
-		std::get<1>(res) |= SOCK_NONBLOCK;
-	}
-
-	if (params.options & Fd::Option::cloexec) {
-		std::get<1>(res) |= SOCK_CLOEXEC;
-	}
-
 	return res;
 }
 
 }
 
-std::shared_ptr<Socket> SocketFactoryImpl::make_socket(Params const& params) const
+std::shared_ptr<Socket> SocketFactoryImpl::make_socket(std::tuple<int, int, int> const& params, Fd::Options const& options) const
 {
-	auto call_params{socket_params(params)};
+	auto call_params{params};
+	if (options & Fd::Option::nonblock) {
+		std::get<1>(call_params) |= SOCK_NONBLOCK;
+	}
+	if (options & Fd::Option::cloexec) {
+		std::get<1>(call_params) |= SOCK_CLOEXEC;
+	}
+
 	auto fd = ::socket(std::get<0>(call_params), std::get<1>(call_params), std::get<2>(call_params));
 	if (fd == -1) {
 		throw make_system_error(errno, Fmt::format("::socket(%s, %s, %s);",
 					std::get<0>(call_params), std::get<1>(call_params), std::get<2>(call_params)));
 	}
 	return std::make_shared<SocketImpl>(Fd::create(fd));
+}
+
+std::shared_ptr<Socket> SocketFactoryImpl::make_socket(Params const& params) const
+{
+	return make_socket(socket_params(params), params.options);
 }
 
 std::shared_ptr<StreamSocket> SocketFactoryImpl::make_stream_socket(Params const& params) const
