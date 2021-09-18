@@ -41,6 +41,8 @@ class Address;
 class SocketAddress {
 public:
 	SocketAddress();
+
+	SocketAddress(std::unique_ptr<sockaddr_storage>, size_t);
 	SocketAddress(Inet::Address const&, uint16_t);
 	SocketAddress(SocketAddress const&);
 	SocketAddress(SocketAddress &&);

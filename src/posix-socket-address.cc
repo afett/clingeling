@@ -39,6 +39,12 @@ size_t init_sockaddr_inet6(sockaddr_in6 *sockaddr, uint16_t port, in6_addr const
 
 namespace Posix {
 
+SocketAddress::SocketAddress(std::unique_ptr<sockaddr_storage> data, size_t size)
+:
+	size_(size),
+	data_(std::move(data))
+{ }
+
 SocketAddress::SocketAddress(Inet::Address const& addr, uint16_t port)
 :
 	data_{std::make_unique<sockaddr_storage>()}
