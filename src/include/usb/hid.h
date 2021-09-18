@@ -95,22 +95,45 @@ enum class Led : uint16_t {
 	Off_Line   = 0x002B,
 };
 
+template <class E>
+constexpr std::underlying_type_t<E> to_underlying(E e) noexcept
+{
+	return static_cast<std::underlying_type_t<E>>(e);
+}
+
 class Report {
 public:
-	explicit Report(Tel)
+	explicit constexpr Report(Tel type) noexcept
+	:
+		page_{to_underlying(Page::Telephony)},
+		type_{to_underlying(type)}
+	{ }
+
+	explicit constexpr Report(Consumer type) noexcept
+	:
+		page_{to_underlying(Page::Consumer)},
+		type_{to_underlying(type)}
+	{ }
+
+	explicit constexpr Report(Led type) noexcept
+	:
+		page_{to_underlying(Page::LED)},
+		type_{to_underlying(type)}
+	{ }
+
+	constexpr uint16_t page() noexcept
 	{
+		return page_;
 	}
 
-	explicit Report(Consumer)
+	constexpr uint16_t type() noexcept
 	{
-	}
-
-	explicit Report(Led)
-	{
+		return type_;
 	}
 
 private:
-
+	uint16_t page_{0};
+	uint16_t type_{0};
 };
 
 }
