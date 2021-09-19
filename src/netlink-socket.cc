@@ -5,6 +5,7 @@
 */
 
 #include "netlink/socket.h"
+#include "posix/socket-address.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -41,6 +42,8 @@ public:
 		socket_->bind(addr);
 	}
 
+	void bind(std::uint32_t) const override;
+
 	void connect(Posix::SocketAddress const& addr) const override
 	{
 		socket_->connect(addr);
@@ -54,6 +57,17 @@ SocketImpl::SocketImpl(std::shared_ptr<Posix::Socket> const& socket)
 :
 	socket_(socket)
 { }
+
+void SocketImpl::bind(std::uint32_t groups) const
+{
+	auto addr_storage = std::make_unique<sockaddr_storage>();
+	auto * addr = reinterpret_cast<sockaddr_nl*>(addr_storage.get());
+	addr->nl_family = AF_NETLINK;
+	addr->nl_pid = 0;
+	addr->nl_groups = groups;
+
+	bind(Posix::SocketAddress(std::move(addr_storage), sizeof(sockaddr_nl)));
+}
 
 class SocketFactoryImpl : public SocketFactory {
 public:

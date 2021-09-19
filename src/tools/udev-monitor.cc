@@ -22,6 +22,7 @@ int main()
 	auto netlink_socket_factory = Netlink::SocketFactory::create();
 	auto netlink_socket = netlink_socket_factory->make_socket(
 			Netlink::Family::KObjectUEvent, {});
+	netlink_socket->bind(0x0002);
 
 	poller->add(netlink_socket, EPoll::Events{EPoll::Event::In},
 			[](auto const& ev) { ::on_netlink_event(ev); });

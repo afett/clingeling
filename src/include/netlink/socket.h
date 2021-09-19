@@ -32,6 +32,7 @@ namespace Netlink {
 class Socket : public Posix::Socket {
 public:
 	virtual std::error_code get_socket_error() const = 0;
+	virtual void bind(std::uint32_t) const = 0;
 
 	virtual ~Socket() = default;
 };
