@@ -38,6 +38,7 @@ public:
 
 enum class Family {
 	Generic,
+	KObjectUEvent,
 };
 
 class SocketFactory {

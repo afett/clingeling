@@ -82,6 +82,9 @@ std::shared_ptr<Socket> SocketFactoryImpl::make_socket(Family family, Posix::Fd:
 	case Family::Generic:
 		netlink_family = NETLINK_GENERIC;
 		break;
+	case Family::KObjectUEvent:
+		netlink_family = NETLINK_KOBJECT_UEVENT;
+		break;
 	}
 	return std::make_shared<SocketImpl>(socket_factory_->make_socket({AF_NETLINK, SOCK_DGRAM, netlink_family}, options));
 }
