@@ -23,6 +23,7 @@ TESTS = test_clingeling
 
 SRC = $(wildcard src/*.cc)
 OBJ = $(SRC:%.cc=%.o)
+LIB = libclingeling.a
 COV_OBJ = $(SRC:%.cc=%.cov.o)
 
 TEST_SRC = $(wildcard src/tests/*.cc)
@@ -37,8 +38,11 @@ GCDA = $(ALL_OBJ:%.o=%.gcda)
 
 all: $(TARGET) $(TESTS)
 
-$(TARGET): $(OBJ)
-	$(CXX) -o $@ $(OBJ) $(LDFLAGS) $(LIBS)
+$(TARGET): $(LIB)
+	$(CXX) -o $@ $(LIB) $(LDFLAGS) $(LIBS)
+
+$(LIB): $(OBJ)
+	ar rcs $@ $^
 
 $(TEST_LIB): $(COV_OBJ)
 	ar rcs $@ $^
@@ -67,6 +71,6 @@ coverage: run_tests
 	genhtml coverage/lcov.info --output-directory coverage
 
 clean:
-	rm -rf $(TARGET) $(TESTS) $(TEST_LIB) $(ALL_OBJ) $(GCNO) $(GCDA) coverage/* *.pc
+	rm -rf $(TARGET) $(LIB) $(TESTS) $(TEST_LIB) $(ALL_OBJ) $(GCNO) $(GCDA) coverage/* *.pc
 
 .PHONY: all clean run_tests run_valgrind run_gdb coverage
