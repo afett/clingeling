@@ -9,3 +9,4 @@ test_*
 coverage/*
 *.pc
 clingeling
+udev-monitor

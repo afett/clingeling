@@ -36,10 +36,17 @@ ALL_OBJ = $(OBJ) $(TEST_OBJ) $(COV_OBJ)
 GCNO = $(ALL_OBJ:%.o=%.gcno)
 GCDA = $(ALL_OBJ:%.o=%.gcda)
 
-all: $(TARGET) $(TESTS)
+TOOLS_SRC = $(wildcard src/tools/*.cc)
+TOOLS_OBJ = $(TOOLS_SRC:%.cc=%.o)
+TOOLS = $(TOOLS_SRC:%.cc=%)
+
+all: $(TARGET) $(TOOLS) $(TESTS)
 
 $(TARGET): $(LIB)
 	$(CXX) -o $@ $(LIB) $(LDFLAGS) $(LIBS)
+
+$(TOOLS): $(LIB) $(TOOLS_OBJ)
+	$(CXX) -o $@ $@.o $(LIB) $(LDFLAGS) $(LIBS)
 
 $(LIB): $(OBJ)
 	ar rcs $@ $^
@@ -71,6 +78,6 @@ coverage: run_tests
 	genhtml coverage/lcov.info --output-directory coverage
 
 clean:
-	rm -rf $(TARGET) $(LIB) $(TESTS) $(TEST_LIB) $(ALL_OBJ) $(GCNO) $(GCDA) coverage/* *.pc
+	rm -rf $(TARGET) $(LIB) $(TESTS) $(TEST_LIB) $(ALL_OBJ) $(GCNO) $(GCDA) coverage/* *.pc $(TOOLS) $(TOOLS_OBJ)
 
 .PHONY: all clean run_tests run_valgrind run_gdb coverage
