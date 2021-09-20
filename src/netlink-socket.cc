@@ -22,6 +22,11 @@ public:
 		return socket_->get_socket_error();
 	}
 
+	void set_recvbuf(size_t size) const override
+	{
+		return socket_->set_recvbuf(size);
+	}
+
 	int get() const override
 	{
 		return socket_->get();

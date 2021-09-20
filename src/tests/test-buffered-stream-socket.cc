@@ -52,6 +52,10 @@ public:
 		return std::error_code{};
 	}
 
+	void set_recvbuf(size_t) const override
+	{
+	}
+
 	State state() const override
 	{
 		return State::in_progress;

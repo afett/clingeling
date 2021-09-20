@@ -21,6 +21,7 @@ public:
 	void bind(SocketAddress const&) const override;
 	void connect(SocketAddress const&) const override;
 	std::error_code get_socket_error() const override;
+	void set_recvbuf(size_t) const override;
 
 	int get() const override
 	{
@@ -38,7 +39,8 @@ public:
 	}
 
 private:
-	int getsockopt(int level, int optname) const;
+	int getsockopt(int, int) const;
+	void setsockopt(int, int, int) const;
 
 	std::shared_ptr<Fd> fd_;
 };
@@ -79,9 +81,22 @@ int SocketImpl::getsockopt(int level, int optname) const
 	return value;
 }
 
+void SocketImpl::setsockopt(int level, int optname, int value) const
+{
+	auto res = ::setsockopt(fd_->get(), level, optname, &value, sizeof(value));
+	if (res == -1) {
+		throw POSIX_SYSTEM_ERROR("::setsockopt(%s, %s, %s, %x, %s);:", fd_.get(), level, optname, &value, sizeof(value));
+	}
+}
+
 std::error_code SocketImpl::get_socket_error() const
 {
 	return {getsockopt(SOL_SOCKET, SO_ERROR), std::generic_category()};
+}
+
+void SocketImpl::set_recvbuf(size_t size) const
+{
+	setsockopt(SOL_SOCKET, SO_RCVBUF, size);
 }
 
 class StreamSocketImpl : public StreamSocket {
@@ -119,6 +134,11 @@ public:
 	std::error_code get_socket_error() const override
 	{
 		return socket_->get_socket_error();
+	}
+
+	void set_recvbuf(size_t size) const override
+	{
+		return socket_->set_recvbuf(size);
 	}
 
 	void connect(SocketAddress const& addr) const override

@@ -39,6 +39,7 @@ public:
 	virtual void bind(SocketAddress const&) const = 0;
 	virtual void connect(SocketAddress const&) const = 0;
 	virtual std::error_code get_socket_error() const = 0;
+	virtual void set_recvbuf(size_t) const = 0;
 
 	virtual ~Socket() = default;
 };
