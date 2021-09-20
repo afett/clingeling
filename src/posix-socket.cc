@@ -76,7 +76,7 @@ int SocketImpl::getsockopt(int level, int optname) const
 	socklen_t len{sizeof(value)};
 	auto res = ::getsockopt(fd_->get(), level, optname, &value, &len);
 	if (res == -1) {
-		throw POSIX_SYSTEM_ERROR("::getsockopt(%s, %s, %s, %x, %s);:", fd_.get(), level, optname, &value, sizeof(value));
+		throw POSIX_SYSTEM_ERROR("::getsockopt(%s, %s, %s, %x, %x);:", fd_.get(), level, optname, &value, &len);
 	}
 	return value;
 }
