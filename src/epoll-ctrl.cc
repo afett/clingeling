@@ -122,7 +122,7 @@ void CtrlImpl::add(std::shared_ptr<Posix::Fd> const& fd, Events const& ev, std::
 void CtrlImpl::del(std::shared_ptr<Posix::Fd> const& fd)
 {
 	if (cb_.erase(fd->get()) == 0) {
-		throw std::runtime_error("cound not find fd to delete");
+		throw std::runtime_error("could not find fd to delete");
 	}
 	if (::epoll_ctl(fd_->get(), EPOLL_CTL_DEL, fd->get(), nullptr) == -1) {
 		throw POSIX_SYSTEM_ERROR("::epoll_ctl(%s, EPOLL_CTL_DEL, %s, nullptr)", fd_->get(), fd->get());
