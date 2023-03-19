@@ -13,10 +13,10 @@ endif
 
 PREFIX ?= /usr/local
 
-DEPS =
+DEPS = libudev
 
-#CXXFLAGS += $(shell pkg-config --cflags $(DEPS))
-LIBS = # -Wl,--as-needed $(shell pkg-config --libs $(DEPS))
+CXXFLAGS += $(shell pkg-config --cflags $(DEPS))
+LIBS =  -Wl,--as-needed $(shell pkg-config --libs $(DEPS))
 
 TARGET = clingeling
 TESTS = test_clingeling
