@@ -248,7 +248,7 @@ private:
 		for (auto ptr: cbs) {
 			auto cb(ptr.lock());
 			if (cb) {
-				cb->fn(std::forward<Args>(args)...);
+				std::invoke(cb->fn, std::forward<Args>(args)...);
 			}
 		}
 	}
