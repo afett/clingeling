@@ -33,9 +33,9 @@ public:
 template <>
 class StringTrait<Baresip::Call::Id> {
 public:
-	static std::string to_string(Baresip::Call::Id const& id)
+	static std::string to_string(Baresip::Call::Id const&)
 	{
-		return to_string(id);
+		return "";
 	}
 };
 
