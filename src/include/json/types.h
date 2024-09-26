@@ -39,11 +39,11 @@ using Object = std::map<std::string, Value>;
 
 class Value {
 public:
-	using value_type = std::variant<nullptr_t, bool, uint64_t, int64_t, std::string, Object, Array>;
+	using value_type = std::variant<std::nullptr_t, bool, uint64_t, int64_t, std::string, Object, Array>;
 
 	Value() = default;
 
-	explicit Value(nullptr_t)
+	explicit Value(std::nullptr_t)
 	:
 		value_{nullptr}
 	{ }
@@ -108,7 +108,7 @@ private:
 
 class ValueMaker {
 public:
-	ValueMaker(nullptr_t)
+	ValueMaker(std::nullptr_t)
 	:
 		value_{}
 	{ }
