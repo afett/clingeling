@@ -27,6 +27,7 @@
 
 #include <sstream>
 #include <functional>
+#include <utility>
 
 namespace Fmt {
 
